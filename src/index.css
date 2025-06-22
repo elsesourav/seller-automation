@@ -20,3 +20,10 @@ body {
    overflow-y: auto;
    overflow-x: hidden;
 }
+
+/* Custom dark dotted background */
+.bg-dark-dotted {
+   @apply bg-gray-900;
+   background-image: radial-gradient(circle, #171d4a 1px, transparent 1px);
+   background-size: 20px 20px;
+}

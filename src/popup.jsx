@@ -1,4 +1,3 @@
-// Popup React entry point
 import React from "react";
 import { createRoot } from "react-dom/client";
 import PopupApp from "./PopupApp.jsx";

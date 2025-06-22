@@ -1,4 +1,3 @@
-import {} from "react";
 import {} from "./lib/utils";
 
 function PopupApp() {
