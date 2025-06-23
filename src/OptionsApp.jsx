@@ -1,28 +1,14 @@
 import { useState } from "react";
 import Navbar from "./components/Navbar";
+import HomeContent from "./components/options/HomeContent";
+import MappingContent from "./components/options/MappingContent";
+import ListingContent from "./components/options/ListingContent";
+import UpdateContent from "./components/options/UpdateContent";
+import SetupContent from "./components/options/SetupContent";
 
-function HomeContent() {
-   return <div>Home</div>;
-}
-
-function MappingContent() {
-   return <div>Mapping</div>;
-}
-
-function ListingContent() {
-   return <div>Listing</div>;
-}
-
-function UpdateContent() {
-   return <div>Update</div>;
-}
-
-function SetupContent() {
-   return <div>Setup</div>;
-}
 
 function OptionsApp() {
-   const [activeTab, setActiveTab] = useState("home");
+   const [activeTab, setActiveTab] = useState("setup");
 
    const renderContent = () => {
       switch (activeTab) {

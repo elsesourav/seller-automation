@@ -102,9 +102,10 @@ export const UpdateIcon = ({ className }) => (
    </svg>
 );
 
-// Setup Icon - Modern gear design
+// Setup Icon - Settings/Configuration design
 export const SetupIcon = ({ className }) => (
    <svg className={className} fill="currentColor" viewBox="0 0 24 24">
+      {/* Settings gear */}
       <circle
          cx="12"
          cy="12"
@@ -114,7 +115,7 @@ export const SetupIcon = ({ className }) => (
          fill="none"
       />
       <path
-         d="M12 1v3m0 16v3m11-9h-3M4.2 12H1m17.66-7.07l-2.12 2.12M7.46 16.95l-2.12 2.12m12.02-.01l-2.12-2.12M7.46 7.05L5.34 4.93"
+         d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"
          stroke="currentColor"
          strokeWidth="2"
          fill="none"
