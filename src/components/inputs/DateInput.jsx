@@ -27,7 +27,7 @@ const DateInput = ({
          <div className="relative">
             <input
                type="date"
-               value={value}
+               value={value || ""}
                onChange={(e) => onChange(e.target.value)}
                onFocus={() => setFocused(true)}
                onBlur={() => setFocused(false)}

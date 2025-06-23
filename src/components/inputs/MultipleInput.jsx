@@ -44,7 +44,8 @@ const MultipleInput = ({
    const [focused, setFocused] = useState(false);
 
    const handleOpenModal = () => {
-      setCurrentValues(value.length > 0 ? [...value] : [""]);
+      const safeValue = value || [];
+      setCurrentValues(safeValue.length > 0 ? [...safeValue] : [""]);
       setIsModalOpen(true);
    };
 
@@ -112,13 +113,14 @@ const MultipleInput = ({
    };
 
    const renderChipsDisplay = () => {
-      if (!value || value.length === 0) {
+      const safeValue = value || [];
+      if (safeValue.length === 0) {
          return <span className="text-gray-500">{placeholder}</span>;
       }
 
       return (
          <div className="flex flex-wrap gap-1 -my-1">
-            {value.map(
+            {safeValue.map(
                (val, index) =>
                   val && (
                      <div

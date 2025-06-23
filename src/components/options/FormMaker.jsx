@@ -1,0 +1,239 @@
+import { useEffect, useState } from "react";
+import { FiEye, FiList, FiPlus, FiX } from "react-icons/fi";
+import AddFieldSection from "../formMaker/AddFieldSection";
+import FieldEditor from "../formMaker/FieldEditor";
+import OrganizeFieldSection from "../formMaker/OrganizeFieldSection";
+import PreviewSection from "../formMaker/PreviewSection";
+import "../formMaker/formMaker.css";
+
+/**
+ * FormMaker - A redesigned component for creating dynamic forms
+ * Features modern UI, improved drag-and-drop, and better organization
+ */
+
+const FormMaker = ({ isOpen, onClose }) => {
+   const [fields, setFields] = useState([]);
+   const [formData, setFormData] = useState({});
+   const [editingField, setEditingField] = useState(null);
+   const [activeSection, setActiveSection] = useState("add");
+
+   // Auto-switch to organize section after adding 2 fields
+   useEffect(() => {
+      if (
+         fields.length >= 2 &&
+         editingField === null &&
+         activeSection === "add"
+      ) {
+         setActiveSection("organize");
+      }
+   }, [fields.length, editingField, activeSection]);
+
+   // Handle form data change in preview
+   const handleFormDataChange = (fieldName, value) => {
+      setFormData((prev) => ({ ...prev, [fieldName]: value }));
+   };
+
+   // Update a field
+   const updateField = (id, updates) => {
+      setFields(
+         fields.map((field) =>
+            field.id === id ? { ...field, ...updates } : field
+         )
+      );
+   };
+
+   // Remove a field
+   const removeField = (id) => {
+      setFields(fields.filter((field) => field.id !== id));
+      if (editingField === id) {
+         setEditingField(null);
+      }
+   };
+
+   // Add option to select field
+   const addOption = (fieldId) => {
+      const field = fields.find((f) => f.id === fieldId);
+      if (field) {
+         const newOption = {
+            value: `option_${field.options.length + 1}`,
+            label: `Option ${field.options.length + 1}`,
+         };
+         updateField(fieldId, {
+            options: [...field.options, newOption],
+         });
+      }
+   };
+
+   // Update option
+   const updateOption = (fieldId, optionIndex, updates) => {
+      const field = fields.find((f) => f.id === fieldId);
+      if (field) {
+         const newOptions = [...field.options];
+         newOptions[optionIndex] = { ...newOptions[optionIndex], ...updates };
+         updateField(fieldId, { options: newOptions });
+      }
+   };
+
+   // Remove option
+   const removeOption = (fieldId, optionIndex) => {
+      const field = fields.find((f) => f.id === fieldId);
+      if (field) {
+         const newOptions = field.options.filter(
+            (_, index) => index !== optionIndex
+         );
+         updateField(fieldId, { options: newOptions });
+      }
+   };
+
+   const tabs = [
+      {
+         id: "add",
+         label: "Add Fields",
+         icon: FiPlus,
+         disabled: false,
+         description: "Create new form fields",
+      },
+      {
+         id: "organize",
+         label: "Organize",
+         icon: FiList,
+         disabled: fields.length === 0,
+         description: "Arrange and configure fields",
+      },
+      {
+         id: "preview",
+         label: "Preview",
+         icon: FiEye,
+         disabled: fields.length === 0,
+         description: "Test your form",
+      },
+   ];
+
+   return (
+      <>
+         {/* Main Modal */}
+         {isOpen && (
+            <div className="fixed z-50 flex items-center justify-center p-4 max-w-[1000px] inset-0 mx-auto">
+               {/* Backdrop */}
+               <div
+                  className="absolute inset-0 backdrop-blur-sm"
+                  onClick={onClose}
+               />
+
+               {/* Modal Container */}
+               <div
+                  className="relative bg-gray-900 rounded-2xl shadow-2xl border border-gray-700 
+                             w-full max-w-7xl max-h-[95vh] flex flex-col"
+               >
+                  {/* Header */}
+                  <div className="flex-shrink-0 border-b border-gray-700">
+                     <div className="flex items-center justify-between p-6">
+                        <div>
+                           <h1 className="text-2xl font-bold text-white mb-1">
+                              Form Builder
+                           </h1>
+                           <p className="text-gray-400">
+                              Create dynamic forms with drag-and-drop
+                              functionality
+                           </p>
+                        </div>
+                        <button
+                           onClick={onClose}
+                           className="p-2 text-gray-400 hover:text-white hover:bg-gray-700 
+                                    rounded-lg transition-colors"
+                        >
+                           <FiX className="w-6 h-6" />
+                        </button>
+                     </div>
+
+                     {/* Tab Navigation */}
+                     <div className="px-6">
+                        <div className="flex space-x-1 bg-gray-800 rounded-lg p-1">
+                           {tabs.map((tab) => {
+                              const Icon = tab.icon;
+                              return (
+                                 <button
+                                    key={tab.id}
+                                    onClick={() =>
+                                       !tab.disabled && setActiveSection(tab.id)
+                                    }
+                                    disabled={tab.disabled}
+                                    className={`flex items-center gap-2 px-4 py-3 rounded-lg text-sm font-medium 
+                                             transition-all duration-200 flex-1 justify-center ${
+                                                activeSection === tab.id
+                                                   ? "bg-blue-600 text-white shadow-lg"
+                                                   : tab.disabled
+                                                   ? "text-gray-600 cursor-not-allowed"
+                                                   : "text-gray-400 hover:text-white hover:bg-gray-700"
+                                             }`}
+                                 >
+                                    <Icon className="w-4 h-4" />
+                                    <span>{tab.label}</span>
+                                    {tab.id === "organize" &&
+                                       fields.length > 0 && (
+                                          <span
+                                             className="ml-1 px-2 py-0.5 bg-blue-500 text-white 
+                                                      text-xs rounded-full"
+                                          >
+                                             {fields.length}
+                                          </span>
+                                       )}
+                                 </button>
+                              );
+                           })}
+                        </div>
+                     </div>
+                  </div>
+
+                  {/* Content Area */}
+                  <div className="flex-1 overflow-hidden">
+                     <div className="h-full overflow-y-auto">
+                        <div className="p-6">
+                           {activeSection === "add" && (
+                              <AddFieldSection
+                                 fields={fields}
+                                 setFields={setFields}
+                                 setEditingField={setEditingField}
+                                 removeField={removeField}
+                              />
+                           )}
+
+                           {activeSection === "organize" && (
+                              <OrganizeFieldSection
+                                 fields={fields}
+                                 setFields={setFields}
+                                 setEditingField={setEditingField}
+                                 removeField={removeField}
+                              />
+                           )}
+
+                           {activeSection === "preview" && (
+                              <PreviewSection
+                                 fields={fields}
+                                 formData={formData}
+                                 handleFormDataChange={handleFormDataChange}
+                              />
+                           )}
+                        </div>
+                     </div>
+                  </div>
+               </div>
+            </div>
+         )}
+
+         {/* Field Editor Modal */}
+         <FieldEditor
+            field={fields.find((f) => f.id === editingField)}
+            isOpen={!!editingField}
+            onClose={() => setEditingField(null)}
+            onUpdate={updateField}
+            onDelete={removeField}
+            onAddOption={addOption}
+            onUpdateOption={updateOption}
+            onRemoveOption={removeOption}
+         />
+      </>
+   );
+};
+
+export default FormMaker;
