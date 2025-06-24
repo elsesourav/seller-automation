@@ -20,28 +20,28 @@ export const WIDTH_OPTIONS = [
       label: "Full Width",
       cols: 12,
       icon: "FiMaximize2",
-      fraction: "1/1",
+      fraction: "100%",
+   },
+   {
+      value: "three-fourths",
+      label: "Three Fourths Width",
+      cols: 9,
+      icon: "FiGrid",
+      fraction: "75%",
    },
    {
       value: "half",
       label: "Half Width",
       cols: 6,
       icon: "FiColumns",
-      fraction: "1/2",
-   },
-   {
-      value: "third",
-      label: "Third Width",
-      cols: 4,
-      icon: "FiGrid",
-      fraction: "1/3",
+      fraction: "50%",
    },
    {
       value: "fourth",
       label: "Quarter Width",
       cols: 3,
       icon: "FiGrid",
-      fraction: "1/4",
+      fraction: "25%",
    },
 ];
 
@@ -97,47 +97,104 @@ export const createNewField = (fieldsLength, type = "text") => {
 };
 
 /**
- * Group fields into rows based on their width settings
+ * Calculate field width in grid columns (out of 12)
  */
-export const groupFieldsIntoRows = (fieldsArray) => {
+export const getFieldColumns = (width) => {
+   const widthOption = WIDTH_OPTIONS.find((w) => w.value === width);
+   return widthOption ? widthOption.cols : 12;
+};
+
+/**
+ * Check if two fields can fit in the same row
+ */
+export const canFieldsFitInRow = (field1Width, field2Width) => {
+   const cols1 = getFieldColumns(field1Width);
+   const cols2 = getFieldColumns(field2Width);
+   return cols1 + cols2 <= 12;
+};
+
+/**
+ * Group fields into rows based on their width and position
+ */
+export const groupFieldsIntoRows = (fields) => {
    const rows = [];
    let currentRow = [];
-   let currentRowWidth = 0;
+   let currentRowCols = 0;
 
-   for (const rawField of fieldsArray) {
-      const field = normalizeField(rawField);
+   fields.forEach((field) => {
+      const fieldCols = getFieldColumns(field.width);
 
-      // HR lines always take full width and force a new row
-      if (field.type === "hr") {
+      // If field is full width or current row can't fit this field, start new row
+      if (fieldCols === 12 || currentRowCols + fieldCols > 12) {
          if (currentRow.length > 0) {
-            rows.push(currentRow);
-         }
-         rows.push([field]);
-         currentRow = [];
-         currentRowWidth = 0;
-         continue;
-      }
-
-      const widthOption = WIDTH_OPTIONS.find((w) => w.value === field.width);
-      const fieldWidth = widthOption ? widthOption.cols : 12;
-
-      if (currentRowWidth + fieldWidth > 12 || field.width === "full") {
-         if (currentRow.length > 0) {
-            rows.push(currentRow);
+            rows.push([...currentRow]);
          }
          currentRow = [field];
-         currentRowWidth = fieldWidth;
+         currentRowCols = fieldCols;
       } else {
+         // Add to current row
          currentRow.push(field);
-         currentRowWidth += fieldWidth;
+         currentRowCols += fieldCols;
       }
-   }
+   });
 
+   // Add the last row if it has fields
    if (currentRow.length > 0) {
       rows.push(currentRow);
    }
 
    return rows;
+};
+
+/**
+ * Flatten rows back into a linear array
+ */
+export const flattenRows = (rows) => {
+   return rows.flat();
+};
+
+/**
+ * Calculate possible drop positions for horizontal positioning
+ */
+export const getHorizontalDropPositions = (fields, draggedField) => {
+   const draggedCols = getFieldColumns(draggedField.width);
+   const positions = [];
+
+   // Group fields into rows
+   const rows = groupFieldsIntoRows(
+      fields.filter((f) => f.id !== draggedField.id)
+   );
+
+   rows.forEach((row, rowIndex) => {
+      const rowCols = row.reduce(
+         (sum, field) => sum + getFieldColumns(field.width),
+         0
+      );
+      const availableCols = 12 - rowCols;
+
+      // If dragged field can fit in this row
+      if (draggedCols <= availableCols) {
+         // Add position at the beginning of the row
+         positions.push({
+            type: "horizontal",
+            rowIndex,
+            position: "start",
+            afterFieldId: null,
+         });
+
+         // Add positions after each field in the row
+         row.forEach((field) => {
+            positions.push({
+               type: "horizontal",
+               rowIndex,
+               position: "after",
+               afterFieldId: field.id,
+            });
+         });
+      }
+   });
+
+   return positions;
 };
 
 /**

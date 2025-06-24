@@ -17,6 +17,7 @@ const FieldEditor = ({
    field,
    isOpen,
    onClose,
+   onSave,
    onUpdate,
    onDelete,
    onAddOption,
@@ -41,7 +42,11 @@ const FieldEditor = ({
    };
 
    const handleSave = () => {
-      onClose();
+      if (onSave) {
+         onSave();
+      } else {
+         onClose();
+      }
    };
 
    const handleDelete = () => {
@@ -58,10 +63,7 @@ const FieldEditor = ({
          />
 
          {/* Modal */}
-         <div
-            className="relative bg-gray-800 rounded-2xl shadow-2xl border border-gray-700 
-                       w-full max-w-4xl max-h-[90vh] flex flex-col"
-         >
+         <div className="relative bg-gray-800 rounded-2xl shadow-2xl border border-gray-700 w-full max-w-4xl max-h-[90vh] flex flex-col">
             {/* Header */}
             <div className="flex items-center justify-between p-6 border-b border-gray-700">
                <div className="flex items-center gap-3">

@@ -19,11 +19,18 @@ const AddFieldSection = ({
    setFields,
    setEditingField,
    removeField,
+   setIsNewField,
 }) => {
    const handleAddField = (type = "text") => {
       const newField = createNewField(fields.length, type);
       setFields([...fields, newField]);
       setEditingField(newField.id);
+      setIsNewField(true); // Mark as new field
+   };
+
+   const handleEditField = (fieldId) => {
+      setEditingField(fieldId);
+      setIsNewField(false); // Mark as existing field
    };
 
    const getIcon = (iconName) => {
@@ -40,46 +47,30 @@ const AddFieldSection = ({
    };
 
    return (
-      <div className="grid grid-cols-1 lg:grid-cols-1 gap-8 h-full">
-         {/* Left Column - Field Type Cards */}
-         <div className="space-y-6">
-            <div>
-               <h3 className="text-xl font-bold text-white mb-2">
-                  Add Field Types
-               </h3>
-            </div>
+      <div className="flex flex-col h-full">
+         {/* Field Type Cards Section */}
+         <div className="flex-shrink-0 space-y-4 mb-6">
+            <p className="text-md font-bold text-white">Add Field Types</p>
 
             <div className="grid grid-cols-6 gap-2">
                {FIELD_TYPES.map((fieldType) => (
                   <button
                      key={fieldType.value}
                      onClick={() => handleAddField(fieldType.value)}
-                     className="group cursor-pointer relative overflow-hidden bg-gradient-to-br from-gray-800 to-gray-900 
-                              rounded-xl p-3 border border-gray-700 hover:border-blue-500 
-                              transition-all duration-300 hover:scale-105 hover:shadow-xl
-                              text-left"
+                     className="group cursor-pointer relative overflow-hidden bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl p-3 border border-gray-700 hover:border-blue-500 transition-all duration-300 hover:scale-105 hover:shadow-xl text-left"
                   >
                      {/* Background Gradient */}
-                     <div
-                        className="absolute inset-0 bg-gradient-to-br from-blue-500/0 to-purple-600/0 
-                                   group-hover:from-blue-500/10 group-hover:to-purple-600/10 
-                                   transition-all duration-300"
-                     />
+                     <div className="absolute inset-0 bg-gradient-to-br from-blue-500/0 to-purple-600/0 group-hover:from-blue-500/10 group-hover:to-purple-600/10 transition-all duration-300" />
 
                      {/* Content */}
                      <div className="relative flex flex-col items-center justify-between h-full">
                         <div className="relative flex w-full h-full items-center justify-between p-3">
-                           <div
-                              className="flex items-center justify-center w-8 h-8 bg-gray-700 rounded-lg group-hover:bg-blue-500 transition-colors duration-300"
-                           >
+                           <div className="flex items-center justify-center w-8 h-8 bg-gray-700 rounded-lg group-hover:bg-blue-500 transition-colors duration-300">
                               {getIcon(fieldType.icon)}
                            </div>
 
                            {/* Hover Effect */}
-                           <div
-                              className="relative opacity-0 group-hover:opacity-100 
-                                   transition-opacity duration-300"
-                           >
+                           <div className="relative opacity-0 group-hover:opacity-100  transition-opacity duration-300">
                               <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
                                  <span className="text-white text-xs font-bold">
                                     +
@@ -97,18 +88,10 @@ const AddFieldSection = ({
             </div>
          </div>
 
-         {/* Right Column - Created Fields List */}
-         <div className="space-y-6">
-            <div className="flex items-center justify-between">
-               <div>
-                  <h3 className="text-xl font-bold text-white mb-2">
-                     Created Fields
-                  </h3>
-                  <p className="text-gray-400">
-                     {fields.length} field{fields.length !== 1 ? "s" : ""}{" "}
-                     created
-                  </p>
-               </div>
+         {/* Created Fields List Section */}
+         <div className="flex flex-col">
+            <div className="flex-shrink-0 flex items-center justify-between mb-4">
+               <p className="text-md font-bold text-white">Created Fields</p>
                {fields.length > 0 && (
                   <div className="px-3 py-1 bg-blue-500/20 text-blue-400 rounded-full text-sm font-medium">
                      {fields.length}
@@ -116,8 +99,8 @@ const AddFieldSection = ({
                )}
             </div>
 
-            {/* Fields List */}
-            <div className="bg-gray-800/50 rounded-xl border border-gray-700 h-[500px] overflow-hidden">
+            {/* Scrollable Fields Container with Fixed Height */}
+            <div className="bg-gray-800/50 rounded-xl border border-gray-700 h-[350px] overflow-hidden">
                {fields.length === 0 ? (
                   <div className="flex flex-col items-center justify-center h-full text-center p-8">
                      <div className="w-16 h-16 bg-gray-700 rounded-full flex items-center justify-center mb-4">
@@ -131,7 +114,7 @@ const AddFieldSection = ({
                      </p>
                   </div>
                ) : (
-                  <div className="p-4 h-full overflow-y-auto custom-scrollbar">
+                  <div className="h-full overflow-y-auto custom-scrollbar p-4">
                      <div className="space-y-3">
                         {fields.map((field, index) => {
                            const fieldTypeInfo = getFieldTypeInfo(field.type);
@@ -177,7 +160,7 @@ const AddFieldSection = ({
                                     >
                                        <button
                                           onClick={() =>
-                                             setEditingField(field.id)
+                                             handleEditField(field.id)
                                           }
                                           className="p-2 text-blue-400 hover:text-blue-300 
                                                    hover:bg-blue-500/20 rounded-lg transition-colors"

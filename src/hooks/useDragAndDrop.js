@@ -1,147 +1,308 @@
 /**
- * Drag and Drop Logic for FormMaker
- * Handles all drag and drop functionality with improved UX
+ * Modern Drag and Drop Logic for FormMaker
+ * Optimized and reliable drag and drop implementation with floating preview
  */
 
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { canFieldsFitInRow } from "../utils/formMaker";
 
 export const useDragAndDrop = (fields, setFields) => {
-   const [draggedItem, setDraggedItem] = useState(null);
+   const [draggedId, setDraggedId] = useState(null);
    const [dragOverIndex, setDragOverIndex] = useState(null);
+   const [horizontalDropZone, setHorizontalDropZone] = useState(null); // New: for horizontal drops
    const [isDragging, setIsDragging] = useState(false);
+   const [dragPreview, setDragPreview] = useState(null);
+   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+   const dragStartPos = useRef({ x: 0, y: 0 });
 
-   // Reset drag state
-   const resetDragState = useCallback(() => {
-      setDraggedItem(null);
-      setDragOverIndex(null);
-      setIsDragging(false);
-   }, []);
-
-   // Start dragging
-   const handleDragStart = useCallback(
-      (e, fieldId) => {
-         const field = fields.find((f) => f.id === fieldId);
-         if (!field) return;
-
-         setDraggedItem(field);
-         setIsDragging(true);
-
-         // Set drag effect
-         e.dataTransfer.effectAllowed = "move";
-         e.dataTransfer.setData("text/plain", fieldId.toString());
-
-         // Add drag image styling
-         e.target.style.opacity = "0.5";
+   // Drag move handler for drag preview (works during drag operations)
+   const handleDragMove = useCallback(
+      (e) => {
+         if (isDragging) {
+            setMousePosition({ x: e.clientX, y: e.clientY });
+         }
       },
-      [fields]
+      [isDragging]
    );
 
-   // Handle drag over
+   // Add/remove drag move listener when dragging starts/stops
+   useEffect(() => {
+      if (isDragging) {
+         document.addEventListener("dragover", handleDragMove);
+         return () => {
+            document.removeEventListener("dragover", handleDragMove);
+         };
+      }
+   }, [isDragging, handleDragMove]);
+
+   // Create drag preview content
+   const createDragPreview = useCallback((field) => {
+      return {
+         id: field.id,
+         label: field.label,
+         type: field.type,
+         width: field.width,
+      };
+   }, []);
+
+   // Reset all drag state
+   const resetDragState = useCallback(() => {
+      setDraggedId(null);
+      setDragOverIndex(null);
+      setHorizontalDropZone(null); // Reset horizontal drop zone
+      setIsDragging(false);
+      setDragPreview(null);
+      setMousePosition({ x: 0, y: 0 });
+      dragStartPos.current = { x: 0, y: 0 };
+   }, []);
+
+   // Handle drag start with threshold
+   const handleDragStart = useCallback(
+      (e, fieldId) => {
+         try {
+            // Store initial position
+            dragStartPos.current = { x: e.clientX, y: e.clientY };
+            setMousePosition({ x: e.clientX, y: e.clientY });
+
+            // Find the dragged field
+            const draggedField = fields.find((field) => field.id === fieldId);
+
+            if (!draggedField) {
+               console.error("❌ [HOOK] Field not found:", fieldId);
+               return;
+            }
+
+            setDraggedId(fieldId);
+            setIsDragging(true);
+
+            const preview = createDragPreview(draggedField);
+            setDragPreview(preview);
+
+            // Configure drag transfer
+            if (e.dataTransfer) {
+               e.dataTransfer.effectAllowed = "move";
+               e.dataTransfer.setData("text/plain", fieldId.toString());
+            } else {
+               console.error("❌ [HOOK] No dataTransfer available");
+            }
+
+            // Add visual feedback to dragged element
+            requestAnimationFrame(() => {
+               if (e.target) {
+                  e.target.style.opacity = "0.6";
+                  e.target.style.transform = "rotate(2deg)";
+               }
+            });
+         } catch (error) {
+            console.error("💥 [HOOK] Error in handleDragStart:", error);
+         }
+      },
+      [fields, createDragPreview]
+   );
+
+   // Handle drag over with optimized performance
    const handleDragOver = useCallback((e) => {
       e.preventDefault();
       e.dataTransfer.dropEffect = "move";
    }, []);
 
-   // Handle drag enter
+   // Handle drag enter with debouncing
    const handleDragEnter = useCallback(
       (e, dropIndex) => {
          e.preventDefault();
-         if (draggedItem && dropIndex !== undefined) {
+
+         if (
+            draggedId &&
+            dropIndex !== undefined &&
+            dropIndex !== dragOverIndex
+         ) {
             setDragOverIndex(dropIndex);
          }
       },
-      [draggedItem]
+      [draggedId, dragOverIndex]
    );
 
-   // Handle drag leave
+   // Optimized drag leave handler
    const handleDragLeave = useCallback((e) => {
       e.preventDefault();
 
-      // Only clear if we're actually leaving the drop zone
+      // Use more reliable boundary detection
       const rect = e.currentTarget.getBoundingClientRect();
-      const x = e.clientX;
-      const y = e.clientY;
+      const { clientX, clientY } = e;
 
-      if (x < rect.left || x > rect.right || y < rect.top || y > rect.bottom) {
+      // Add small buffer to prevent flickering
+      const buffer = 5;
+      if (
+         clientX < rect.left - buffer ||
+         clientX > rect.right + buffer ||
+         clientY < rect.top - buffer ||
+         clientY > rect.bottom + buffer
+      ) {
          setDragOverIndex(null);
       }
    }, []);
 
-   // Handle drop
+   // Enhanced drop handler with better logic
    const handleDrop = useCallback(
       (e, dropIndex) => {
          e.preventDefault();
 
-         if (!draggedItem || dropIndex === undefined) return;
+         if (!draggedId || dropIndex === undefined) {
+            resetDragState();
+            return;
+         }
 
          const draggedIndex = fields.findIndex(
-            (field) => field.id === draggedItem.id
+            (field) => field.id === draggedId
          );
-         if (draggedIndex === -1) return;
 
-         // Don't drop on the same position
-         if (draggedIndex === dropIndex) {
+         if (draggedIndex === -1) {
+            resetDragState();
+            return;
+         }
+
+         // Calculate if this is actually a position change
+         const isSamePosition =
+            draggedIndex === dropIndex ||
+            (draggedIndex < dropIndex && draggedIndex === dropIndex - 1);
+
+         if (isSamePosition) {
+            resetDragState();
+            return;
+         }
+
+         // Perform the reorder
+         const newFields = [...fields];
+         const [draggedField] = newFields.splice(draggedIndex, 1);
+
+         // Calculate insertion index
+         const insertIndex =
+            draggedIndex < dropIndex ? dropIndex - 1 : dropIndex;
+         newFields.splice(insertIndex, 0, draggedField);
+
+         setFields(newFields);
+         resetDragState();
+      },
+      [fields, draggedId, setFields, resetDragState]
+   );
+
+   // Clean drag end handler
+   const handleDragEnd = useCallback(
+      (e) => {
+         console.log("🏁 Drag End - dropEffect:", e.dataTransfer?.dropEffect);
+
+         // Reset visual styling
+         if (e.target) {
+            e.target.style.opacity = "";
+            e.target.style.transform = "";
+         }
+
+         resetDragState();
+      },
+      [resetDragState]
+   );
+
+   // Handle horizontal drop zone enter
+   const handleHorizontalDropEnter = useCallback(
+      (e, fieldId, position) => {
+         e.preventDefault();
+
+         if (!draggedId) return;
+
+         const draggedField = fields.find((f) => f.id === draggedId);
+         const targetField = fields.find((f) => f.id === fieldId);
+
+         if (!draggedField || !targetField) return;
+
+         // Check if fields can fit together
+         if (canFieldsFitInRow(draggedField.width, targetField.width)) {
+            setHorizontalDropZone({
+               fieldId,
+               position, // 'left' or 'right'
+            });
+            setDragOverIndex(null); // Clear vertical drop zones
+         }
+      },
+      [draggedId, fields]
+   );
+
+   // Handle horizontal drop zone leave
+   const handleHorizontalDropLeave = useCallback((e) => {
+      e.preventDefault();
+
+      const rect = e.currentTarget.getBoundingClientRect();
+      const { clientX, clientY } = e;
+      const buffer = 5;
+
+      if (
+         clientX < rect.left - buffer ||
+         clientX > rect.right + buffer ||
+         clientY < rect.top - buffer ||
+         clientY > rect.bottom + buffer
+      ) {
+         setHorizontalDropZone(null);
+      }
+   }, []);
+
+   // Handle horizontal drop
+   const handleHorizontalDrop = useCallback(
+      (e, fieldId, position) => {
+         e.preventDefault();
+
+         if (!draggedId || !horizontalDropZone) {
+            resetDragState();
+            return;
+         }
+
+         const draggedIndex = fields.findIndex((f) => f.id === draggedId);
+         const targetIndex = fields.findIndex((f) => f.id === fieldId);
+
+         if (draggedIndex === -1 || targetIndex === -1) {
             resetDragState();
             return;
          }
 
          // Create new fields array
          const newFields = [...fields];
-         const draggedField = newFields[draggedIndex];
+         const [draggedField] = newFields.splice(draggedIndex, 1);
 
-         // Remove the dragged field
-         newFields.splice(draggedIndex, 1);
-
-         // Calculate correct insert index
-         let insertIndex = dropIndex;
-         if (draggedIndex < dropIndex) {
-            insertIndex = dropIndex - 1;
+         // Calculate insertion index based on position
+         let insertIndex;
+         if (position === "left") {
+            insertIndex =
+               draggedIndex < targetIndex ? targetIndex - 1 : targetIndex;
+         } else {
+            // 'right'
+            insertIndex =
+               draggedIndex < targetIndex ? targetIndex : targetIndex + 1;
          }
 
-         // Ensure we don't go out of bounds
-         insertIndex = Math.max(0, Math.min(insertIndex, newFields.length));
-
-         // Insert at new position
          newFields.splice(insertIndex, 0, draggedField);
 
-         // Update fields
          setFields(newFields);
          resetDragState();
       },
-      [fields, draggedItem, setFields, resetDragState]
+      [fields, draggedId, horizontalDropZone, setFields, resetDragState]
    );
 
-   // Handle drag end
-   const handleDragEnd = useCallback(
-      (e) => {
-         // Reset drag image styling
-         e.target.style.opacity = "1";
-         resetDragState();
-      },
-      [resetDragState]
-   );
-
-   // Check if item is being dragged
+   // Utility functions
    const isItemDragged = useCallback(
-      (fieldId) => {
-         return draggedItem?.id === fieldId;
-      },
-      [draggedItem]
+      (fieldId) => draggedId === fieldId,
+      [draggedId]
    );
 
-   // Check if position is drag target
    const isDragTarget = useCallback(
-      (index) => {
-         return dragOverIndex === index;
-      },
+      (index) => dragOverIndex === index,
       [dragOverIndex]
    );
 
    return {
       // State
-      draggedItem,
+      draggedId,
       dragOverIndex,
       isDragging,
+      dragPreview,
+      mousePosition,
 
       // Handlers
       handleDragStart,
@@ -150,6 +311,9 @@ export const useDragAndDrop = (fields, setFields) => {
       handleDragLeave,
       handleDrop,
       handleDragEnd,
+      handleHorizontalDropEnter,
+      handleHorizontalDropLeave,
+      handleHorizontalDrop,
 
       // Utilities
       isItemDragged,

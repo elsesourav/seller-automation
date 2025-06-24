@@ -16,21 +16,38 @@ const FormMaker = ({ isOpen, onClose }) => {
    const [formData, setFormData] = useState({});
    const [editingField, setEditingField] = useState(null);
    const [activeSection, setActiveSection] = useState("add");
+   const [isNewField, setIsNewField] = useState(false);
 
-   // Auto-switch to organize section after adding 2 fields
    useEffect(() => {
-      if (
-         fields.length >= 2 &&
-         editingField === null &&
-         activeSection === "add"
-      ) {
-         setActiveSection("organize");
+      if (isOpen) {
+         document.body.style.overflow = "hidden";
+      } else {
+         document.body.style.overflow = "unset";
       }
-   }, [fields.length, editingField, activeSection]);
+      return () => {
+         document.body.style.overflow = "unset";
+      };
+   }, [isOpen]);
 
    // Handle form data change in preview
    const handleFormDataChange = (fieldName, value) => {
       setFormData((prev) => ({ ...prev, [fieldName]: value }));
+   };
+
+   // Handle field editor close
+   const handleFieldEditorClose = () => {
+      if (isNewField && editingField) {
+         // If it's a new field and user cancels, remove it
+         setFields(fields.filter((field) => field.id !== editingField));
+      }
+      setEditingField(null);
+      setIsNewField(false);
+   };
+
+   // Handle field editor save
+   const handleFieldEditorSave = () => {
+      setEditingField(null);
+      setIsNewField(false);
    };
 
    // Update a field
@@ -113,7 +130,7 @@ const FormMaker = ({ isOpen, onClose }) => {
       <>
          {/* Main Modal */}
          {isOpen && (
-            <div className="fixed z-50 flex items-center justify-center p-4 max-w-[1000px] inset-0 mx-auto">
+            <div className="fixed z-50 flex items-center justify-center p-4 inset-0 mx-auto">
                {/* Backdrop */}
                <div
                   className="absolute inset-0 backdrop-blur-sm"
@@ -121,10 +138,7 @@ const FormMaker = ({ isOpen, onClose }) => {
                />
 
                {/* Modal Container */}
-               <div
-                  className="relative bg-gray-900 rounded-2xl shadow-2xl border border-gray-700 
-                             w-full max-w-7xl max-h-[95vh] flex flex-col"
-               >
+               <div className="relative bg-gray-900 rounded-2xl shadow-2xl border border-gray-700 w-[800px] md:w-[900px] max-h-[95vh] flex flex-col">
                   {/* Header */}
                   <div className="flex-shrink-0 border-b border-gray-700">
                      <div className="flex items-center justify-between p-6">
@@ -132,10 +146,6 @@ const FormMaker = ({ isOpen, onClose }) => {
                            <h1 className="text-2xl font-bold text-white mb-1">
                               Form Builder
                            </h1>
-                           <p className="text-gray-400">
-                              Create dynamic forms with drag-and-drop
-                              functionality
-                           </p>
                         </div>
                         <button
                            onClick={onClose}
@@ -195,6 +205,7 @@ const FormMaker = ({ isOpen, onClose }) => {
                                  setFields={setFields}
                                  setEditingField={setEditingField}
                                  removeField={removeField}
+                                 setIsNewField={setIsNewField}
                               />
                            )}
 
@@ -202,7 +213,6 @@ const FormMaker = ({ isOpen, onClose }) => {
                               <OrganizeFieldSection
                                  fields={fields}
                                  setFields={setFields}
-                                 setEditingField={setEditingField}
                                  removeField={removeField}
                               />
                            )}
@@ -225,7 +235,8 @@ const FormMaker = ({ isOpen, onClose }) => {
          <FieldEditor
             field={fields.find((f) => f.id === editingField)}
             isOpen={!!editingField}
-            onClose={() => setEditingField(null)}
+            onClose={handleFieldEditorClose}
+            onSave={handleFieldEditorSave}
             onUpdate={updateField}
             onDelete={removeField}
             onAddOption={addOption}
