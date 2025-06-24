@@ -1,8 +1,3 @@
-/**
- * Modern Drag and Drop Logic for FormMaker
- * Optimized and reliable drag and drop implementation with floating preview
- */
-
 import { useCallback, useEffect, useRef, useState } from "react";
 import { canFieldsFitInRow } from "../utils/formMaker";
 
@@ -90,7 +85,6 @@ export const useDragAndDrop = (fields, setFields) => {
             requestAnimationFrame(() => {
                if (e.target) {
                   e.target.style.opacity = "0.6";
-                  e.target.style.transform = "rotate(2deg)";
                }
             });
          } catch (error) {
@@ -194,12 +188,73 @@ export const useDragAndDrop = (fields, setFields) => {
          // Reset visual styling
          if (e.target) {
             e.target.style.opacity = "";
-            e.target.style.transform = "";
          }
 
          resetDragState();
       },
       [resetDragState]
+   );
+
+   // Handle horizontal drop
+   const handleHorizontalDrop = useCallback(
+      (e, fieldId, position) => {
+         e.preventDefault();
+
+         if (!draggedId) {
+            resetDragState();
+            return;
+         }
+
+         const draggedIndex = fields.findIndex((f) => f.id === draggedId);
+         const targetIndex = fields.findIndex((f) => f.id === fieldId);
+
+         if (draggedIndex === -1 || targetIndex === -1) {
+            resetDragState();
+            return;
+         }
+
+         const draggedField = fields[draggedIndex];
+         const targetField = fields[targetIndex];
+
+         // Create new fields array without the dragged field
+         const newFields = fields.filter((_, index) => index !== draggedIndex);
+
+         // Find the adjusted target index after removing dragged field
+         const adjustedTargetIndex = newFields.findIndex(
+            (f) => f.id === fieldId
+         );
+
+         let insertIndex;
+         if (position === "left") {
+            // Insert immediately before the target field
+            insertIndex = adjustedTargetIndex;
+         } else if (position.startsWith("right")) {
+            // Insert immediately after the target field
+            insertIndex = adjustedTargetIndex + 1;
+         } else {
+            // Default: insert after target
+            insertIndex = adjustedTargetIndex + 1;
+         }
+
+         // Insert the dragged field at the calculated position
+         newFields.splice(insertIndex, 0, draggedField);
+
+         console.log("🔄 Horizontal Drop:", {
+            draggedFieldId: draggedField.id,
+            targetFieldId: targetField.id,
+            position,
+            draggedIndex,
+            targetIndex,
+            adjustedTargetIndex,
+            insertIndex,
+            oldLength: fields.length,
+            newLength: newFields.length,
+         });
+
+         setFields(newFields);
+         resetDragState();
+      },
+      [fields, draggedId, setFields, resetDragState]
    );
 
    // Handle horizontal drop zone enter
@@ -244,47 +299,6 @@ export const useDragAndDrop = (fields, setFields) => {
       }
    }, []);
 
-   // Handle horizontal drop
-   const handleHorizontalDrop = useCallback(
-      (e, fieldId, position) => {
-         e.preventDefault();
-
-         if (!draggedId || !horizontalDropZone) {
-            resetDragState();
-            return;
-         }
-
-         const draggedIndex = fields.findIndex((f) => f.id === draggedId);
-         const targetIndex = fields.findIndex((f) => f.id === fieldId);
-
-         if (draggedIndex === -1 || targetIndex === -1) {
-            resetDragState();
-            return;
-         }
-
-         // Create new fields array
-         const newFields = [...fields];
-         const [draggedField] = newFields.splice(draggedIndex, 1);
-
-         // Calculate insertion index based on position
-         let insertIndex;
-         if (position === "left") {
-            insertIndex =
-               draggedIndex < targetIndex ? targetIndex - 1 : targetIndex;
-         } else {
-            // 'right'
-            insertIndex =
-               draggedIndex < targetIndex ? targetIndex : targetIndex + 1;
-         }
-
-         newFields.splice(insertIndex, 0, draggedField);
-
-         setFields(newFields);
-         resetDragState();
-      },
-      [fields, draggedId, horizontalDropZone, setFields, resetDragState]
-   );
-
    // Utility functions
    const isItemDragged = useCallback(
       (fieldId) => draggedId === fieldId,
@@ -300,6 +314,7 @@ export const useDragAndDrop = (fields, setFields) => {
       // State
       draggedId,
       dragOverIndex,
+      horizontalDropZone,
       isDragging,
       dragPreview,
       mousePosition,

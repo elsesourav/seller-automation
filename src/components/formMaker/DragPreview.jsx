@@ -26,17 +26,17 @@ const DragPreview = ({ dragPreview, mousePosition }) => {
       return <IconComponent className="w-4 h-4" />;
    };
 
-   const getWidthClass = (width) => {
+   const getWidthPixels = (width) => {
       switch (width) {
          case "fourth":
-            return "w-1/4"; // 25%
+            return "200px"; // 25% - smaller fixed width
          case "half":
-            return "w-1/2"; // 50%
+            return "300px"; // 50% - medium fixed width
          case "three-fourths":
-            return "w-3/4"; // 75%
+            return "450px"; // 75% - larger fixed width
          case "full":
          default:
-            return "w-full"; // 100%
+            return "600px"; // 100% - full fixed width
       }
    };
 
@@ -49,9 +49,9 @@ const DragPreview = ({ dragPreview, mousePosition }) => {
          }}
       >
          <div
-            className={`${getWidthClass(
-               dragPreview.width
-            )} min-w-[200px] max-w-[400px]`}
+            style={{
+               width: getWidthPixels(dragPreview.width),
+            }}
          >
             <div className="bg-gray-800/95 backdrop-blur-sm rounded-xl border border-blue-500/50 shadow-2xl p-4 transform rotate-3 scale-95">
                {dragPreview.type === "hr" ? (

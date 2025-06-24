@@ -12,10 +12,63 @@ import "../formMaker/formMaker.css";
  */
 
 const FormMaker = ({ isOpen, onClose }) => {
-   const [fields, setFields] = useState([]);
+   // Test data with various field widths
+   const testFields = [
+      {
+         id: 1,
+         type: "text",
+         label: "First Name",
+         placeholder: "Enter first name",
+         width: "half",
+         required: true,
+         options: [],
+      },
+      {
+         id: 2,
+         type: "text",
+         label: "Last Name",
+         placeholder: "Enter last name",
+         width: "half",
+         required: true,
+         options: [],
+      },
+      {
+         id: 3,
+         type: "text",
+         label: "Full Address",
+         placeholder: "Enter your full address",
+         width: "full",
+         required: false,
+         options: [],
+      },
+      {
+         id: 4,
+         type: "number",
+         label: "Age",
+         placeholder: "Enter age",
+         width: "fourth",
+         required: false,
+         options: [],
+      },
+      {
+         id: 5,
+         type: "select",
+         label: "Country",
+         placeholder: "Select country",
+         width: "three-fourths",
+         required: true,
+         options: [
+            { value: "us", label: "United States" },
+            { value: "ca", label: "Canada" },
+            { value: "uk", label: "United Kingdom" },
+         ],
+      },
+   ];
+
+   const [fields, setFields] = useState(testFields); // Start with test data
    const [formData, setFormData] = useState({});
    const [editingField, setEditingField] = useState(null);
-   const [activeSection, setActiveSection] = useState("add");
+   const [activeSection, setActiveSection] = useState("organize"); // Start on organize section
    const [isNewField, setIsNewField] = useState(false);
 
    useEffect(() => {
