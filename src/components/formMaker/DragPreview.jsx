@@ -9,14 +9,9 @@ import {
 import { getWidthIcon } from "../../utils/widthIcons";
 
 const DragPreview = ({ dragPreview, mousePosition }) => {
-   console.log("🖼️ DragPreview Render:", { dragPreview, mousePosition });
-
    if (!dragPreview) {
-      console.log("❌ No drag preview - returning null");
       return null;
    }
-
-   console.log("✅ Rendering drag preview at position:", mousePosition);
 
    const getFieldIcon = (type) => {
       const icons = {
@@ -51,9 +46,6 @@ const DragPreview = ({ dragPreview, mousePosition }) => {
          style={{
             left: mousePosition.x,
             top: mousePosition.y,
-            backgroundColor: "rgba(255, 0, 0, 0.2)", // Temporary red background for debugging
-            border: "2px solid red", // Temporary red border for debugging
-            padding: "4px",
          }}
       >
          <div

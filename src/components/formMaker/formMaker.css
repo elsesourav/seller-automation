@@ -22,22 +22,11 @@
    background: #6b7280;
 }
 
-/* Smooth transitions for drag and drop */
-.drag-item {
-   transition: transform 0.2s ease, opacity 0.2s ease;
+/* Field palette styles */
+.field-palette-item:hover .field-palette-icon {
+   transform: scale(1.1);
 }
 
-.drag-item.dragging {
-   transform: scale(0.95);
-   opacity: 0.5;
-}
-
-.drop-zone {
-   transition: all 0.2s ease;
-}
-
-.drop-zone.active {
-   border-color: #3b82f6;
-   background-color: rgba(59, 130, 246, 0.1);
-   box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
+.field-palette-icon {
+   transition: transform 0.2s ease;
 }

@@ -261,11 +261,6 @@ export const getFieldSectorCount = (width) => {
  * Fields without explicit positions are auto-placed in available sectors
  */
 export const organizeFieldsIntoSectors = (fields) => {
-   // Handle edge cases
-   if (!fields || !Array.isArray(fields) || fields.length === 0) {
-      return [];
-   }
-
    const rows = [];
 
    // First pass: identify unique row indices and sort fields
@@ -273,9 +268,7 @@ export const organizeFieldsIntoSectors = (fields) => {
       ...field,
       originalIndex: index,
       effectiveRowIndex:
-         field.rowIndex !== null && field.rowIndex !== undefined 
-            ? field.rowIndex 
-            : Math.floor(index / 4), // Default: 4 fields per row attempt
+         field.rowIndex !== null ? field.rowIndex : Math.floor(index / 4), // Default: 4 fields per row attempt
    }));
 
    // Group fields by their effective row index
@@ -295,19 +288,12 @@ export const organizeFieldsIntoSectors = (fields) => {
 
    sortedRowIndices.forEach((rowIndex) => {
       const rowFields = fieldsByRow[rowIndex];
-      
-      // Safety check
-      if (!rowFields || !Array.isArray(rowFields)) {
-         return;
-      }
-      
       const sectors = [null, null, null, null]; // 4 sectors per row
 
       // First, place fields with explicit sector positions
       rowFields.forEach((field) => {
          if (
             field.sectorPosition !== null &&
-            field.sectorPosition !== undefined &&
             field.sectorPosition >= 0 &&
             field.sectorPosition <= 3
          ) {
@@ -339,18 +325,17 @@ export const organizeFieldsIntoSectors = (fields) => {
       });
 
       // Then, auto-place fields without explicit positions
-      if (rowFields && Array.isArray(rowFields)) {
-         rowFields.forEach((field) => {
-            // Skip if already placed (check both explicit positioning and if already in sectors)
-            const isExplicitlyPositioned = field.sectorPosition !== null && field.sectorPosition !== undefined;
-            const isAlreadyPlaced = sectors.some((s) => s && s.field && s.field.id === field.id);
-            
-            if (isExplicitlyPositioned || isAlreadyPlaced) {
-               return;
-            }
+      rowFields.forEach((field) => {
+         // Skip if already placed
+         if (
+            field.sectorPosition !== null &&
+            sectors.some((s) => s && s.field.id === field.id)
+         ) {
+            return;
+         }
 
-            const sectorCount = getFieldSectorCount(field.width);
-            let placed = false;
+         const sectorCount = getFieldSectorCount(field.width);
+         let placed = false;
 
          // Find first available position for auto-placement
          for (
@@ -400,7 +385,6 @@ export const organizeFieldsIntoSectors = (fields) => {
             return;
          }
       });
-      }
 
       rows.push(sectors);
    });
