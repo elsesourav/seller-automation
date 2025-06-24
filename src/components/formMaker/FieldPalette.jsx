@@ -1,4 +1,6 @@
 import {
+   FiAlignCenter,
+   FiBox,
    FiCalendar,
    FiChevronDown,
    FiHash,
@@ -10,11 +12,13 @@ import { FIELD_TYPES } from "../../utils/formMaker";
 
 const FIELD_ICONS = {
    FiType: FiType,
+   FiAlignCenter: FiAlignCenter,
    FiHash: FiHash,
    FiCalendar: FiCalendar,
    FiChevronDown: FiChevronDown,
    FiList: FiList,
    FiMinus: FiMinus,
+   FiBox: FiBox,
 };
 
 /**
@@ -91,14 +95,6 @@ const FieldPalette = () => {
                );
             })}
          </div>
-
-         <div className="p-4 border-t border-gray-700">
-            <div className="text-xs text-gray-500 text-center space-y-1">
-               <div>🎯 Drag fields to canvas</div>
-               <div>📐 Grid shows width options</div>
-               <div>↔️ Drop between fields for horizontal placement</div>
-            </div>
-         </div>
       </div>
    );
 };
@@ -106,11 +102,12 @@ const FieldPalette = () => {
 const getFieldDescription = (type) => {
    const descriptions = {
       text: "Single line text input",
+      title: "Header title for sections",
       number: "Numeric input with validation",
       date: "Date picker input",
       select: "Dropdown selection",
       multiple: "Multiple choice options",
-      hr: "Visual separator line",
+      spacer: "Empty space for layout",
    };
    return descriptions[type] || "Form field";
 };

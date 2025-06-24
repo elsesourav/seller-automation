@@ -22,7 +22,7 @@ const FormMaker = ({ isOpen, onClose }) => {
    const [formData, setFormData] = useState({});
 
    // Initialize drag and drop functionality
-   const dragAndDrop = useDragAndDrop(fields, setFields);
+   const dragAndDrop = useDragAndDrop(fields);
 
    useEffect(() => {
       if (isOpen) {
@@ -72,14 +72,23 @@ const FormMaker = ({ isOpen, onClose }) => {
    }, []);
 
    // Reorder fields
-   const reorderFields = useCallback((sourceIndex, destinationIndex) => {
-      setFields((prev) => {
-         const newFields = [...prev];
-         const [removed] = newFields.splice(sourceIndex, 1);
-         newFields.splice(destinationIndex, 0, removed);
-         return newFields;
-      });
-   }, []);
+   const reorderFields = useCallback(
+      (sourceIndex, destinationIndex, newFieldsArray = null) => {
+         if (newFieldsArray) {
+            // Special case: directly set the provided fields array (for complex operations like width + position)
+            setFields(newFieldsArray);
+         } else {
+            // Normal reordering
+            setFields((prev) => {
+               const newFields = [...prev];
+               const [removed] = newFields.splice(sourceIndex, 1);
+               newFields.splice(destinationIndex, 0, removed);
+               return newFields;
+            });
+         }
+      },
+      []
+   );
 
    // Edit field
    const editField = useCallback((field) => {

@@ -6,11 +6,12 @@
 // Available field types
 export const FIELD_TYPES = [
    { value: "text", label: "Text Input", icon: "FiType" },
+   { value: "title", label: "Title Header", icon: "FiAlignCenter" },
    { value: "number", label: "Number Input", icon: "FiHash" },
    { value: "date", label: "Date Input", icon: "FiCalendar" },
    { value: "select", label: "Select Dropdown", icon: "FiChevronDown" },
    { value: "multiple", label: "Multiple Values", icon: "FiList" },
-   { value: "hr", label: "Horizontal Line", icon: "FiMinus" },
+   { value: "spacer", label: "Spacer Field", icon: "FiBox" },
 ];
 
 // Width options for fields
@@ -50,7 +51,7 @@ export const WIDTH_OPTIONS = [
  */
 export const normalizeField = (field) => ({
    ...field,
-   width: field.type === "hr" ? "full" : field.width || "full",
+   width: field.width || "full",
    padding: field.padding || { top: 0, bottom: 0, left: 0, right: 0 },
    name: field.name || "",
    label: field.label || "",
@@ -84,12 +85,22 @@ export const createNewField = (fieldsLength, type = "text") => {
    };
 
    // Type-specific defaults
-   if (type === "hr") {
+   if (type === "spacer") {
       return {
          ...baseField,
-         name: `hr_${fieldsLength + 1}`,
-         label: "Horizontal Line",
-         width: "full",
+         name: `spacer_${fieldsLength + 1}`,
+         label: "Spacer Field",
+         width: "fourth", // Default to quarter width, but can be changed
+      };
+   }
+
+   if (type === "title") {
+      return {
+         ...baseField,
+         name: `title_${fieldsLength + 1}`,
+         label: `Header Title ${fieldsLength + 1}`,
+         placeholder: "Enter your title here",
+         width: "full", // Titles typically take full width
       };
    }
 
@@ -106,18 +117,6 @@ export const groupFieldsIntoRows = (fieldsArray) => {
 
    for (const rawField of fieldsArray) {
       const field = normalizeField(rawField);
-
-      // HR lines always take full width and force a new row
-      if (field.type === "hr") {
-         if (currentRow.length > 0) {
-            rows.push(currentRow);
-         }
-         rows.push([field]);
-         currentRow = [];
-         currentRowWidth = 0;
-         continue;
-      }
-
       const widthOption = WIDTH_OPTIONS.find((w) => w.value === field.width);
       const fieldWidth = widthOption ? widthOption.cols : 12;
 
