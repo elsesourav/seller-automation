@@ -9,9 +9,14 @@ import {
 import { getWidthIcon } from "../../utils/widthIcons";
 
 const DragPreview = ({ dragPreview, mousePosition }) => {
+   console.log("🖼️ DragPreview Render:", { dragPreview, mousePosition });
+
    if (!dragPreview) {
+      console.log("❌ No drag preview - returning null");
       return null;
    }
+
+   console.log("✅ Rendering drag preview at position:", mousePosition);
 
    const getFieldIcon = (type) => {
       const icons = {
@@ -26,17 +31,17 @@ const DragPreview = ({ dragPreview, mousePosition }) => {
       return <IconComponent className="w-4 h-4" />;
    };
 
-   const getWidthPixels = (width) => {
+   const getWidthClass = (width) => {
       switch (width) {
          case "fourth":
-            return "200px"; // 25% - smaller fixed width
+            return "w-1/4"; // 25%
          case "half":
-            return "300px"; // 50% - medium fixed width
+            return "w-1/2"; // 50%
          case "three-fourths":
-            return "450px"; // 75% - larger fixed width
+            return "w-3/4"; // 75%
          case "full":
          default:
-            return "600px"; // 100% - full fixed width
+            return "w-full"; // 100%
       }
    };
 
@@ -46,12 +51,15 @@ const DragPreview = ({ dragPreview, mousePosition }) => {
          style={{
             left: mousePosition.x,
             top: mousePosition.y,
+            backgroundColor: "rgba(255, 0, 0, 0.2)", // Temporary red background for debugging
+            border: "2px solid red", // Temporary red border for debugging
+            padding: "4px",
          }}
       >
          <div
-            style={{
-               width: getWidthPixels(dragPreview.width),
-            }}
+            className={`${getWidthClass(
+               dragPreview.width
+            )} min-w-[200px] max-w-[400px]`}
          >
             <div className="bg-gray-800/95 backdrop-blur-sm rounded-xl border border-blue-500/50 shadow-2xl p-4 transform rotate-3 scale-95">
                {dragPreview.type === "hr" ? (
@@ -81,13 +89,6 @@ const DragPreview = ({ dragPreview, mousePosition }) => {
                            <div className="flex items-center gap-2 mt-1">
                               <span className="text-xs text-gray-400 capitalize">
                                  {dragPreview.type}
-                              </span>
-                              <span className="text-xs text-blue-400">
-                                 {dragPreview.width === "full" && "100%"}
-                                 {dragPreview.width === "three-fourths" &&
-                                    "75%"}
-                                 {dragPreview.width === "half" && "50%"}
-                                 {dragPreview.width === "fourth" && "25%"}
                               </span>
                            </div>
                         </div>

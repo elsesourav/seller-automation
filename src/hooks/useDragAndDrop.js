@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { canFieldsFitInRow } from "../utils/formMaker";
 
 export const useDragAndDrop = (fields, setFields) => {
    const [draggedId, setDraggedId] = useState(null);
@@ -9,15 +8,63 @@ export const useDragAndDrop = (fields, setFields) => {
    const [dragPreview, setDragPreview] = useState(null);
    const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
    const dragStartPos = useRef({ x: 0, y: 0 });
+   const scrollContainerRef = useRef(null);
+   const autoScrollInterval = useRef(null);
 
-   // Drag move handler for drag preview (works during drag operations)
+   // Auto-scroll functionality
+   const handleAutoScroll = useCallback(
+      (e) => {
+         if (!scrollContainerRef.current || !isDragging) return;
+
+         const container = scrollContainerRef.current;
+         const rect = container.getBoundingClientRect();
+         const scrollZone = 60; // Pixels from edge to trigger scroll
+         const scrollSpeed = 8; // Scroll speed
+
+         const mouseY = e.clientY - rect.top;
+         const containerHeight = rect.height;
+
+         // Clear existing interval
+         if (autoScrollInterval.current) {
+            clearInterval(autoScrollInterval.current);
+            autoScrollInterval.current = null;
+         }
+
+         // Check if mouse is in scroll zones
+         if (mouseY < scrollZone && container.scrollTop > 0) {
+            // Scroll up
+            autoScrollInterval.current = setInterval(() => {
+               container.scrollTop = Math.max(
+                  0,
+                  container.scrollTop - scrollSpeed
+               );
+            }, 16);
+         } else if (
+            mouseY > containerHeight - scrollZone &&
+            container.scrollTop <
+               container.scrollHeight - container.clientHeight
+         ) {
+            // Scroll down
+            autoScrollInterval.current = setInterval(() => {
+               container.scrollTop = Math.min(
+                  container.scrollHeight - container.clientHeight,
+                  container.scrollTop + scrollSpeed
+               );
+            }, 16);
+         }
+      },
+      [isDragging]
+   );
+
+   // Drag move handler for drag preview and auto-scroll
    const handleDragMove = useCallback(
       (e) => {
          if (isDragging) {
             setMousePosition({ x: e.clientX, y: e.clientY });
+            handleAutoScroll(e);
          }
       },
-      [isDragging]
+      [isDragging, handleAutoScroll]
    );
 
    // Add/remove drag move listener when dragging starts/stops
@@ -49,6 +96,12 @@ export const useDragAndDrop = (fields, setFields) => {
       setDragPreview(null);
       setMousePosition({ x: 0, y: 0 });
       dragStartPos.current = { x: 0, y: 0 };
+
+      // Clear auto-scroll interval
+      if (autoScrollInterval.current) {
+         clearInterval(autoScrollInterval.current);
+         autoScrollInterval.current = null;
+      }
    }, []);
 
    // Handle drag start with threshold
@@ -102,18 +155,51 @@ export const useDragAndDrop = (fields, setFields) => {
 
    // Handle drag enter with debouncing
    const handleDragEnter = useCallback(
-      (e, dropIndex) => {
+      (e, dropIndex, sectorInfo) => {
          e.preventDefault();
 
+         if (!draggedId) return;
+
+         // Handle sector-specific targeting
+         if (sectorInfo && sectorInfo.startsWith("sector-")) {
+            // Validate that the dragged field can fit in this sector
+            const draggedField = fields.find(f => f.id === draggedId);
+            if (draggedField) {
+               const sectorParts = sectorInfo.split("-");
+               const sectorIndex = parseInt(sectorParts[2]);
+               
+               const getFieldSectorCount = (width) => {
+                  switch (width) {
+                     case "fourth": return 1;
+                     case "half": return 2;
+                     case "three-fourths": return 3;
+                     case "full": return 4;
+                     default: return 1;
+                  }
+               };
+               
+               const fieldSectorCount = getFieldSectorCount(draggedField.width);
+               
+               // Only set as target if field can fit
+               if (!isNaN(sectorIndex) && sectorIndex + fieldSectorCount <= 4) {
+                  setHorizontalDropZone(sectorInfo);
+                  setDragOverIndex(null); // Clear linear drop zones
+                  return;
+               }
+            }
+         }
+
+         // Handle linear drop targeting
          if (
             draggedId &&
             dropIndex !== undefined &&
             dropIndex !== dragOverIndex
          ) {
             setDragOverIndex(dropIndex);
+            setHorizontalDropZone(null); // Clear sector targeting
          }
       },
-      [draggedId, dragOverIndex]
+      [draggedId, dragOverIndex, fields]
    );
 
    // Optimized drag leave handler
@@ -133,12 +219,13 @@ export const useDragAndDrop = (fields, setFields) => {
          clientY > rect.bottom + buffer
       ) {
          setDragOverIndex(null);
+         setHorizontalDropZone(null); // Also clear sector targeting
       }
    }, []);
 
    // Enhanced drop handler with better logic
    const handleDrop = useCallback(
-      (e, dropIndex) => {
+      (e, dropIndex, sectorInfo) => {
          e.preventDefault();
 
          if (!draggedId || dropIndex === undefined) {
@@ -155,7 +242,67 @@ export const useDragAndDrop = (fields, setFields) => {
             return;
          }
 
-         // Calculate if this is actually a position change
+         const draggedField = fields[draggedIndex];
+
+         // Handle sector-based drop
+         if (sectorInfo && sectorInfo.startsWith("sector-")) {
+            const sectorParts = sectorInfo.split("-");
+            const rowIndex = parseInt(sectorParts[1]);
+            const sectorIndex = parseInt(sectorParts[2]);
+
+            if (!isNaN(rowIndex) && !isNaN(sectorIndex)) {
+               // Get field sector count based on width
+               const getFieldSectorCount = (width) => {
+                  switch (width) {
+                     case "fourth": return 1;
+                     case "half": return 2;
+                     case "three-fourths": return 3;
+                     case "full": return 4;
+                     default: return 1;
+                  }
+               };
+
+               const fieldSectorCount = getFieldSectorCount(draggedField.width);
+               
+               // Check if field can fit in the target sector position
+               if (sectorIndex + fieldSectorCount <= 4) {
+                  console.log("✅ Sector drop successful:", {
+                     fieldId: draggedField.id,
+                     fieldWidth: draggedField.width,
+                     sectorCount: fieldSectorCount,
+                     targetRow: rowIndex,
+                     targetSector: sectorIndex
+                  });
+                  
+                  // Update the field with explicit sector positioning
+                  const newFields = [...fields];
+                  const updatedField = {
+                     ...draggedField,
+                     sectorPosition: sectorIndex,
+                     rowIndex: rowIndex,
+                  };
+
+                  newFields[draggedIndex] = updatedField;
+                  setFields(newFields);
+                  resetDragState();
+                  return;
+               } else {
+                  // Field doesn't fit in this position, reset and do nothing
+                  console.log("❌ Field too wide for sector position:", {
+                     fieldId: draggedField.id,
+                     fieldWidth: draggedField.width,
+                     sectorCount: fieldSectorCount,
+                     targetSector: sectorIndex,
+                     maxSectors: 4,
+                     wouldOverflow: sectorIndex + fieldSectorCount
+                  });
+                  resetDragState();
+                  return;
+               }
+            }
+         }
+
+         // Regular linear drop handling (when not dropping into a sector)
          const isSamePosition =
             draggedIndex === dropIndex ||
             (draggedIndex < dropIndex && draggedIndex === dropIndex - 1);
@@ -167,12 +314,12 @@ export const useDragAndDrop = (fields, setFields) => {
 
          // Perform the reorder
          const newFields = [...fields];
-         const [draggedField] = newFields.splice(draggedIndex, 1);
+         const [draggedFieldToMove] = newFields.splice(draggedIndex, 1);
 
          // Calculate insertion index
          const insertIndex =
             draggedIndex < dropIndex ? dropIndex - 1 : dropIndex;
-         newFields.splice(insertIndex, 0, draggedField);
+         newFields.splice(insertIndex, 0, draggedFieldToMove);
 
          setFields(newFields);
          resetDragState();
@@ -269,8 +416,26 @@ export const useDragAndDrop = (fields, setFields) => {
 
          if (!draggedField || !targetField) return;
 
-         // Check if fields can fit together
-         if (canFieldsFitInRow(draggedField.width, targetField.width)) {
+         // Simple width check - can fields fit in 4 sectors (100%)?
+         const getFieldSectorCount = (width) => {
+            switch (width) {
+               case "fourth":
+                  return 1;
+               case "half":
+                  return 2;
+               case "three-fourths":
+                  return 3;
+               case "full":
+                  return 4;
+               default:
+                  return 1;
+            }
+         };
+
+         const draggedSectors = getFieldSectorCount(draggedField.width);
+         const targetSectors = getFieldSectorCount(targetField.width);
+
+         if (draggedSectors + targetSectors <= 4) {
             setHorizontalDropZone({
                fieldId,
                position, // 'left' or 'right'
@@ -306,8 +471,14 @@ export const useDragAndDrop = (fields, setFields) => {
    );
 
    const isDragTarget = useCallback(
-      (index) => dragOverIndex === index,
-      [dragOverIndex]
+      (index, sectorInfo) => {
+         if (sectorInfo) {
+            // Check if this specific sector is the target
+            return horizontalDropZone === sectorInfo;
+         }
+         return dragOverIndex === index;
+      },
+      [dragOverIndex, horizontalDropZone]
    );
 
    return {
@@ -318,6 +489,9 @@ export const useDragAndDrop = (fields, setFields) => {
       isDragging,
       dragPreview,
       mousePosition,
+
+      // Refs
+      scrollContainerRef,
 
       // Handlers
       handleDragStart,

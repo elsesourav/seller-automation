@@ -97,104 +97,47 @@ export const createNewField = (fieldsLength, type = "text") => {
 };
 
 /**
- * Calculate field width in grid columns (out of 12)
+ * Group fields into rows based on their width settings
  */
-export const getFieldColumns = (width) => {
-   const widthOption = WIDTH_OPTIONS.find((w) => w.value === width);
-   return widthOption ? widthOption.cols : 12;
-};
-
-/**
- * Check if two fields can fit in the same row
- */
-export const canFieldsFitInRow = (field1Width, field2Width) => {
-   const cols1 = getFieldColumns(field1Width);
-   const cols2 = getFieldColumns(field2Width);
-   return cols1 + cols2 <= 12;
-};
-
-/**
- * Group fields into rows based on their width and position
- */
-export const groupFieldsIntoRows = (fields) => {
+export const groupFieldsIntoRows = (fieldsArray) => {
    const rows = [];
    let currentRow = [];
-   let currentRowCols = 0;
+   let currentRowWidth = 0;
 
-   fields.forEach((field) => {
-      const fieldCols = getFieldColumns(field.width);
+   for (const rawField of fieldsArray) {
+      const field = normalizeField(rawField);
 
-      // If field is full width or current row can't fit this field, start new row
-      if (fieldCols === 12 || currentRowCols + fieldCols > 12) {
+      // HR lines always take full width and force a new row
+      if (field.type === "hr") {
          if (currentRow.length > 0) {
-            rows.push([...currentRow]);
+            rows.push(currentRow);
+         }
+         rows.push([field]);
+         currentRow = [];
+         currentRowWidth = 0;
+         continue;
+      }
+
+      const widthOption = WIDTH_OPTIONS.find((w) => w.value === field.width);
+      const fieldWidth = widthOption ? widthOption.cols : 12;
+
+      if (currentRowWidth + fieldWidth > 12 || field.width === "full") {
+         if (currentRow.length > 0) {
+            rows.push(currentRow);
          }
          currentRow = [field];
-         currentRowCols = fieldCols;
+         currentRowWidth = fieldWidth;
       } else {
-         // Add to current row
          currentRow.push(field);
-         currentRowCols += fieldCols;
+         currentRowWidth += fieldWidth;
       }
-   });
+   }
 
-   // Add the last row if it has fields
    if (currentRow.length > 0) {
       rows.push(currentRow);
    }
 
    return rows;
-};
-
-/**
- * Flatten rows back into a linear array
- */
-export const flattenRows = (rows) => {
-   return rows.flat();
-};
-
-/**
- * Calculate possible drop positions for horizontal positioning
- */
-export const getHorizontalDropPositions = (fields, draggedField) => {
-   const draggedCols = getFieldColumns(draggedField.width);
-   const positions = [];
-
-   // Group fields into rows
-   const rows = groupFieldsIntoRows(
-      fields.filter((f) => f.id !== draggedField.id)
-   );
-
-   rows.forEach((row, rowIndex) => {
-      const rowCols = row.reduce(
-         (sum, field) => sum + getFieldColumns(field.width),
-         0
-      );
-      const availableCols = 12 - rowCols;
-
-      // If dragged field can fit in this row
-      if (draggedCols <= availableCols) {
-         // Add position at the beginning of the row
-         positions.push({
-            type: "horizontal",
-            rowIndex,
-            position: "start",
-            afterFieldId: null,
-         });
-
-         // Add positions after each field in the row
-         row.forEach((field) => {
-            positions.push({
-               type: "horizontal",
-               rowIndex,
-               position: "after",
-               afterFieldId: field.id,
-            });
-         });
-      }
-   });
-
-   return positions;
 };
 
 /**
@@ -291,4 +234,176 @@ const getSchemaType = (fieldType) => {
       default:
          return "string";
    }
+};
+
+/**
+ * Get number of sectors a field occupies (1-4 sectors, each 25%)
+ */
+export const getFieldSectorCount = (width) => {
+   switch (width) {
+      case "fourth":
+         return 1; // Takes 1 sector (25%)
+      case "half":
+         return 2; // Takes 2 sectors (50%)
+      case "three-fourths":
+         return 3; // Takes 3 sectors (75%)
+      case "full":
+         return 4; // Takes all 4 sectors (100%)
+      default:
+         return 1;
+   }
+};
+
+/**
+ * Organize fields into sector-based rows for manual placement
+ * Each row has 4 sectors (25% each)
+ * Fields with explicit sector positions are placed exactly where specified
+ * Fields without explicit positions are auto-placed in available sectors
+ */
+export const organizeFieldsIntoSectors = (fields) => {
+   // Handle edge cases
+   if (!fields || !Array.isArray(fields) || fields.length === 0) {
+      return [];
+   }
+
+   const rows = [];
+
+   // First pass: identify unique row indices and sort fields
+   const fieldsWithRows = fields.map((field, index) => ({
+      ...field,
+      originalIndex: index,
+      effectiveRowIndex:
+         field.rowIndex !== null && field.rowIndex !== undefined 
+            ? field.rowIndex 
+            : Math.floor(index / 4), // Default: 4 fields per row attempt
+   }));
+
+   // Group fields by their effective row index
+   const fieldsByRow = {};
+   fieldsWithRows.forEach((field) => {
+      const rowIndex = field.effectiveRowIndex;
+      if (!fieldsByRow[rowIndex]) {
+         fieldsByRow[rowIndex] = [];
+      }
+      fieldsByRow[rowIndex].push(field);
+   });
+
+   // Sort row indices and process each row
+   const sortedRowIndices = Object.keys(fieldsByRow)
+      .map(Number)
+      .sort((a, b) => a - b);
+
+   sortedRowIndices.forEach((rowIndex) => {
+      const rowFields = fieldsByRow[rowIndex];
+      
+      // Safety check
+      if (!rowFields || !Array.isArray(rowFields)) {
+         return;
+      }
+      
+      const sectors = [null, null, null, null]; // 4 sectors per row
+
+      // First, place fields with explicit sector positions
+      rowFields.forEach((field) => {
+         if (
+            field.sectorPosition !== null &&
+            field.sectorPosition !== undefined &&
+            field.sectorPosition >= 0 &&
+            field.sectorPosition <= 3
+         ) {
+            const sectorCount = getFieldSectorCount(field.width);
+            const startSector = field.sectorPosition;
+
+            // Check if the field can fit in the specified position
+            let canFit = true;
+            for (let i = 0; i < sectorCount && startSector + i < 4; i++) {
+               if (sectors[startSector + i] !== null) {
+                  canFit = false;
+                  break;
+               }
+            }
+
+            // Place the field if it fits, otherwise it will be auto-placed later
+            if (canFit) {
+               for (let i = 0; i < sectorCount && startSector + i < 4; i++) {
+                  sectors[startSector + i] = {
+                     field,
+                     sectorIndex: i,
+                     totalSectors: sectorCount,
+                     startSector,
+                     isExplicitlyPlaced: true,
+                  };
+               }
+            }
+         }
+      });
+
+      // Then, auto-place fields without explicit positions
+      if (rowFields && Array.isArray(rowFields)) {
+         rowFields.forEach((field) => {
+            // Skip if already placed (check both explicit positioning and if already in sectors)
+            const isExplicitlyPositioned = field.sectorPosition !== null && field.sectorPosition !== undefined;
+            const isAlreadyPlaced = sectors.some((s) => s && s.field && s.field.id === field.id);
+            
+            if (isExplicitlyPositioned || isAlreadyPlaced) {
+               return;
+            }
+
+            const sectorCount = getFieldSectorCount(field.width);
+            let placed = false;
+
+         // Find first available position for auto-placement
+         for (
+            let startSector = 0;
+            startSector <= 4 - sectorCount && !placed;
+            startSector++
+         ) {
+            let canFit = true;
+            for (let i = 0; i < sectorCount; i++) {
+               if (sectors[startSector + i] !== null) {
+                  canFit = false;
+                  break;
+               }
+            }
+
+            if (canFit) {
+               for (let i = 0; i < sectorCount; i++) {
+                  sectors[startSector + i] = {
+                     field,
+                     sectorIndex: i,
+                     totalSectors: sectorCount,
+                     startSector,
+                     isExplicitlyPlaced: false,
+                  };
+               }
+               placed = true;
+            }
+         }
+
+         // If couldn't fit in current row, create a new row
+         if (!placed) {
+            // Finish current row
+            rows.push(sectors);
+
+            // Create new row with this field
+            const newSectors = [null, null, null, null];
+            for (let i = 0; i < sectorCount; i++) {
+               newSectors[i] = {
+                  field,
+                  sectorIndex: i,
+                  totalSectors: sectorCount,
+                  startSector: 0,
+                  isExplicitlyPlaced: false,
+               };
+            }
+            rows.push(newSectors);
+            return;
+         }
+      });
+      }
+
+      rows.push(sectors);
+   });
+
+   return rows;
 };
