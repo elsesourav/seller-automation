@@ -17,7 +17,6 @@ const FormCanvas = ({
    const [draggingFieldId, setDraggingFieldId] = useState(null);
    const [draggingRowIndex, setDraggingRowIndex] = useState(null);
    const [rowDropTarget, setRowDropTarget] = useState(null);
-   const [hoveredRowIndex, setHoveredRowIndex] = useState(null);
    const [showGrid, setShowGrid] = useState(false);
    const [gridDropZone, setGridDropZone] = useState(null);
    const [horizontalDropZone, setHorizontalDropZone] = useState(null);
@@ -211,11 +210,11 @@ const FormCanvas = ({
    const handleRowDragEnd = useCallback(() => {
       setDraggingRowIndex(null);
       setRowDropTarget(null);
-      setHoveredRowIndex(null);
    }, []);
 
    const handleRowDrop = useCallback(
       (e, targetRowIndex) => {
+
          e.preventDefault();
          e.stopPropagation();
 
@@ -538,90 +537,51 @@ const FormCanvas = ({
 
          <div
             ref={canvasRef}
-            className="flex-1 p-4 pl-12 overflow-y-auto custom-scrollbar relative"
+            className="flex-1 p-4 pl-12 overflow-y-auto custom-scrollbar relative bg-blue-500"
             onDragOver={handleDragOver}
             onDragEnter={handleDragEnter}
             onDragLeave={handleDragLeave}
-            onMouseMove={(e) => {
-               // During row drag, detect which row we're hovering near
-               if (draggingRowIndex !== null) {
-                  const canvasRect = canvasRef.current?.getBoundingClientRect();
-                  if (!canvasRect) return;
-
-                  const relativeY = e.clientY - canvasRect.top;
-                  const scrollTop = canvasRef.current.scrollTop;
-                  const absoluteY = relativeY + scrollTop;
-
-                  // Find the closest row based on Y position
-                  const rowElements =
-                     canvasRef.current.querySelectorAll("[data-row-index]");
-                  let closestRowIndex = null;
-                  let minDistance = Infinity;
-
-                  rowElements.forEach((element, index) => {
-                     const rect = element.getBoundingClientRect();
-                     const canvasRelativeTop =
-                        rect.top - canvasRect.top + scrollTop;
-                     const rowCenter = canvasRelativeTop + rect.height / 2;
-                     const distance = Math.abs(absoluteY - rowCenter);
-
-                     // Only consider if we're within reasonable distance (e.g., 100px)
-                     if (distance < 100 && distance < minDistance) {
-                        minDistance = distance;
-                        closestRowIndex = index;
-                     }
-                  });
-
-                  setHoveredRowIndex(closestRowIndex);
-               }
-            }}
          >
             <div className="space-y-4 relative z-20">
-               {/* Drop zone before first row - show when hovering near first row, at top, or when no specific row is hovered */}
-               {draggingRowIndex !== null &&
-                  (hoveredRowIndex === 0 ||
-                     hoveredRowIndex === null ||
-                     rows.length <= 2) && (
-                     <div
-                        className={`h-8 mx-4 rounded-lg border-2 border-dashed transition-all duration-200 flex items-center justify-center
+               {/* Drop zone before first row */}
+               {/* {draggingRowIndex !== null && (
+                  <div
+                     className={`h-4 mx-4 rounded border-2 border-dashed transition-colors grid place-items-center
                         ${
                            rowDropTarget === "before-0"
-                              ? "border-blue-400 bg-blue-400/30 shadow-lg"
-                              : "border-blue-300/70 hover:border-blue-400 bg-blue-400/10"
+                              ? "border-blue-400 bg-blue-400/20"
+                              : "border-blue-300/50 hover:border-blue-400"
                         }
                      `}
-                        onDragOver={(e) => {
-                           e.preventDefault();
-                           e.stopPropagation();
-                           setRowDropTarget("before-0");
-                        }}
-                        onDrop={(e) => {
-                           e.preventDefault();
-                           e.stopPropagation();
-                           handleRowDrop(e, 0);
-                        }}
-                     >
-                        <div className="text-sm text-blue-400 font-medium">
-                           Drop here to move to top
-                        </div>
+                     onDragOver={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setRowDropTarget("before-0");
+                     }}
+                     onDrop={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        handleRowDrop(e, 0);
+                     }}
+                  >
+                     <div className="text-center text-xs text-blue-400 py-1">
+                        Drop here to move to top
                      </div>
-                  )}
+                  </div>
+               )} */}
 
                {rows.map((row, rowIndex) => (
                   <div key={`row-container-${rowIndex}`}>
-                     {/* Drop zone above each row - show when hovering near this row or adjacent rows */}
+                     {/* Drop zone above each row (except first) */}
                      {rowIndex > 0 &&
                         draggingRowIndex !== null &&
-                        draggingRowIndex !== rowIndex &&
-                        (hoveredRowIndex === rowIndex ||
-                           hoveredRowIndex === rowIndex - 1 ||
-                           (hoveredRowIndex === null && rows.length <= 3)) && (
+                        draggingRowIndex !== rowIndex && (
                            <div
-                              className={`h-8 mx-4 rounded-lg border-2 border-dashed transition-all duration-200 flex items-center justify-center mb-2
+                              className={`h-full -translate-y-2 mx-4 rounded border-2 border-dashed transition-colors grid place-items-center
                                  ${
                                     rowDropTarget === `before-${rowIndex}`
-                                       ? "border-blue-400 bg-blue-400/30 shadow-lg"
-                                       : "border-blue-300/70 hover:border-blue-400 bg-blue-400/10"
+                                       ? "border-blue-400 bg-blue-400/20"
+                                       : "border-blue-300/50 hover:border-blue-400"
                                  }
                               `}
                               onDragOver={(e) => {
@@ -635,7 +595,7 @@ const FormCanvas = ({
                                  handleRowDrop(e, rowIndex);
                               }}
                            >
-                              <div className="text-sm text-blue-400 font-medium">
+                              <div className="text-center text-xs text-blue-400 py-1">
                                  Drop here
                               </div>
                            </div>
@@ -644,27 +604,24 @@ const FormCanvas = ({
                      <div
                         className={`relative group ${
                            draggingRowIndex === rowIndex
-                              ? "opacity-30 scale-95 transform rotate-1"
+                              ? "opacity-30 scale-95 transform"
                               : ""
                         } ${
                            rowDropTarget === rowIndex
                               ? "ring-2 ring-blue-400 rounded-lg"
                               : ""
                         } transition-all duration-200`}
-                        data-row-index={rowIndex}
-                        onMouseEnter={() => setHoveredRowIndex(rowIndex)}
-                        onMouseLeave={() => setHoveredRowIndex(null)}
                      >
                         {/* Row drag handle */}
                         <div
-                           className="absolute -left-8 top-0 bottom-0 flex items-center opacity-0 group-hover:opacity-100 transition-opacity z-30"
+                           className="absolute -left-8 top-0 bottom-0 flex items-center opacity-0 group-hover:opacity-100 transition-opacity z-30 bg-red-500"
                            draggable
                            onDragStart={(e) => handleRowDragStart(e, rowIndex)}
                            onDragEnd={handleRowDragEnd}
                            title="Drag to reorder row"
                         >
                            <div
-                              className={`p-2 rounded cursor-grab active:cursor-grabbing border shadow-lg transition-colors
+                              className={`p-2 h-full rounded cursor-grab active:cursor-grabbing border shadow-lg transition-colors grid place-items-center
                               ${
                                  draggingRowIndex === rowIndex
                                     ? "bg-blue-600 border-blue-500"
@@ -693,35 +650,32 @@ const FormCanvas = ({
                   </div>
                ))}
 
-               {/* Drop zone after last row - show when hovering near last row, at bottom, or when no specific row is hovered */}
-               {draggingRowIndex !== null &&
-                  (hoveredRowIndex === rows.length - 1 ||
-                     hoveredRowIndex === null ||
-                     rows.length <= 2) && (
-                     <div
-                        className={`h-8 mx-4 rounded-lg border-2 border-dashed transition-all duration-200 flex items-center justify-center mt-2
+               {/* Drop zone after last row */}
+               {/* {draggingRowIndex !== null && (
+                  <div
+                     className={`h-4 mx-4 rounded border-2 border-dashed transition-colors grid place-items-center
                         ${
                            rowDropTarget === `after-${rows.length - 1}`
-                              ? "border-blue-400 bg-blue-400/30 shadow-lg"
-                              : "border-blue-300/70 hover:border-blue-400 bg-blue-400/10"
+                              ? "border-blue-400 bg-blue-400/20"
+                              : "border-blue-300/50 hover:border-blue-400"
                         }
                      `}
-                        onDragOver={(e) => {
-                           e.preventDefault();
-                           e.stopPropagation();
-                           setRowDropTarget(`after-${rows.length - 1}`);
-                        }}
-                        onDrop={(e) => {
-                           e.preventDefault();
-                           e.stopPropagation();
-                           handleRowDrop(e, rows.length);
-                        }}
-                     >
-                        <div className="text-sm text-blue-400 font-medium">
-                           Drop here to move to bottom
-                        </div>
+                     onDragOver={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setRowDropTarget(`after-${rows.length - 1}`);
+                     }}
+                     onDrop={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        handleRowDrop(e, rows.length);
+                     }}
+                  >
+                     <div className="text-center text-xs text-blue-400 py-1">
+                        Drop here to move to bottom
                      </div>
-                  )}
+                  </div>
+               )} */}
             </div>
 
             {/* Grid overlay - positioned after all content, but don't show during row dragging */}
