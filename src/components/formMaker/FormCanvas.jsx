@@ -20,6 +20,7 @@ const FormCanvas = ({
    const [showGrid, setShowGrid] = useState(false);
    const [gridDropZone, setGridDropZone] = useState(null);
    const [horizontalDropZone, setHorizontalDropZone] = useState(null);
+   const [fieldSwapTarget, setFieldSwapTarget] = useState(null);
    const canvasRef = useRef(null);
 
    // Handle drag over with grid visualization
@@ -85,6 +86,46 @@ const FormCanvas = ({
       [fields, onReorderFields]
    );
 
+   // Group fields into rows - memoized to prevent dependency issues (moved here to be available for row drag handlers)
+   const rows = useMemo(() => {
+      return fields.length > 0 ? groupFieldsIntoRows(fields) : [];
+   }, [fields]); // Handle field swap within the same row
+   const handleFieldSwap = useCallback(
+      (sourceFieldId, targetFieldId) => {
+         const sourceIndex = fields.findIndex((f) => f.id === sourceFieldId);
+         const targetIndex = fields.findIndex((f) => f.id === targetFieldId);
+
+         if (sourceIndex === -1 || targetIndex === -1) {
+            return;
+         }
+
+         // Check if both fields are in the same row
+         const sourceRow = rows.findIndex((row) =>
+            row.some((field) => field.id === sourceFieldId)
+         );
+         const targetRow = rows.findIndex((row) =>
+            row.some((field) => field.id === targetFieldId)
+         );
+
+         if (sourceRow !== targetRow) {
+            return; // Not in the same row
+         }
+
+         // Swap the fields while maintaining their widths
+         const newFields = [...fields];
+         const sourceField = newFields[sourceIndex];
+         const targetField = newFields[targetIndex];
+
+         // Swap positions but keep original widths
+         newFields[sourceIndex] = { ...targetField };
+         newFields[targetIndex] = { ...sourceField };
+
+         // Update fields using the callback
+         onReorderFields(0, 0, newFields);
+      },
+      [fields, rows, onReorderFields]
+   );
+
    // Handle drop with enhanced positioning
    const handleDrop = useCallback(
       (e, dropIndex = null) => {
@@ -110,7 +151,10 @@ const FormCanvas = ({
                   (f) => f.id === data.fieldId
                );
                if (sourceIndex !== -1) {
-                  if (gridDropZone) {
+                  // Check if we're dropping on another field for swapping
+                  if (fieldSwapTarget) {
+                     handleFieldSwap(data.fieldId, fieldSwapTarget.fieldId);
+                  } else if (gridDropZone) {
                      // Grid positioning - update field width and reorder
                      const field = fields[sourceIndex];
                      const updatedField = {
@@ -151,14 +195,17 @@ const FormCanvas = ({
          setHorizontalDropZone(null);
          setDraggingFieldId(null);
          setRowDropTarget(null);
+         setFieldSwapTarget(null);
       },
       [
          fields,
          gridDropZone,
          horizontalDropZone,
+         fieldSwapTarget,
          onAddField,
          onReorderFields,
          handleHorizontalDrop,
+         handleFieldSwap,
       ]
    );
 
@@ -185,12 +232,45 @@ const FormCanvas = ({
       setGridDropZone(null);
       setHorizontalDropZone(null);
       setRowDropTarget(null);
+      setFieldSwapTarget(null);
    }, []);
 
-   // Group fields into rows - memoized to prevent dependency issues (moved here to be available for row drag handlers)
-   const rows = useMemo(() => {
-      return fields.length > 0 ? groupFieldsIntoRows(fields) : [];
-   }, [fields]);
+   const handleFieldDragEnter = useCallback(
+      (targetFieldId) => {
+         // Only set swap target if we're currently dragging a field
+         if (draggingFieldId && draggingFieldId !== targetFieldId) {
+            const sourceField = fields.find((f) => f.id === draggingFieldId);
+            const targetField = fields.find((f) => f.id === targetFieldId);
+
+            if (sourceField && targetField) {
+               // Check if both fields are in the same row
+               const sourceRow = rows.findIndex((row) =>
+                  row.some((field) => field.id === draggingFieldId)
+               );
+               const targetRow = rows.findIndex((row) =>
+                  row.some((field) => field.id === targetFieldId)
+               );
+
+               // Only allow swapping within the same row
+               if (sourceRow === targetRow && sourceRow !== -1) {
+                  setFieldSwapTarget({ fieldId: targetFieldId });
+                  // Hide grid when showing swap target
+                  setShowGrid(false);
+                  setGridDropZone(null);
+               }
+            }
+         }
+      },
+      [draggingFieldId, fields, rows]
+   );
+
+   const handleFieldDragLeave = useCallback(() => {
+      setFieldSwapTarget(null);
+      // Show grid again when leaving a potential swap target
+      if (draggingFieldId && draggingRowIndex === null) {
+         setShowGrid(true);
+      }
+   }, [draggingFieldId, draggingRowIndex]);
 
    // Handle row dragging
    const handleRowDragStart = useCallback((e, rowIndex) => {
@@ -366,6 +446,10 @@ const FormCanvas = ({
                            isDragging={draggingFieldId === field.id}
                            onDragStart={handleFieldDragStart}
                            onDragEnd={handleFieldDragEnd}
+                           onFieldDragEnter={handleFieldDragEnter}
+                           onFieldDragLeave={handleFieldDragLeave}
+                           onDrop={handleDrop}
+                           isSwapTarget={fieldSwapTarget?.fieldId === field.id}
                         />
                      </div>
                   );
@@ -447,10 +531,13 @@ const FormCanvas = ({
          draggingRowIndex,
          gridDropZone,
          draggingFieldId,
+         fieldSwapTarget,
          onEditField,
          onDeleteField,
          handleFieldDragStart,
          handleFieldDragEnd,
+         handleFieldDragEnter,
+         handleFieldDragLeave,
          handleGridPosition,
          handleDrop,
          rows,
@@ -542,33 +629,6 @@ const FormCanvas = ({
             onDragLeave={handleDragLeave}
          >
             <div className="relative z-20 flex flex-col gap-3">
-               {/* Drop zone before first row */}
-               {/* {draggingRowIndex !== null && (
-                  <div
-                     className={`h-4 mx-4 rounded border-2 border-dashed transition-colors
-                        ${
-                           rowDropTarget === "before-0"
-                              ? "border-blue-400 bg-blue-400/20"
-                              : "border-blue-300/50 hover:border-blue-400"
-                        }
-                     `}
-                     onDragOver={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        setRowDropTarget("before-0");
-                     }}
-                     onDrop={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        handleRowDrop(e, 0);
-                     }}
-                  >
-                     <div className="text-center text-xs text-blue-400 py-1">
-                        Drop here to move to top
-                     </div>
-                  </div>
-               )} */}
-
                {rows.map((row, rowIndex) => (
                   <div className="relative" key={`row-container-${rowIndex}`}>
                      {/* Drop zone above each row (except first) */}
@@ -642,35 +702,6 @@ const FormCanvas = ({
                      </div>
                   </div>
                ))}
-
-               {/* Drop zone after last row */}
-               {
-                  // draggingRowIndex !== null && (
-                  // <div
-                  //    className={`h-4 mx-4 rounded border-2 border-dashed transition-colors
-                  //       ${
-                  //          rowDropTarget === `after-${rows.length - 1}`
-                  //             ? "border-blue-400 bg-blue-400/20"
-                  //             : "border-blue-300/50 hover:border-blue-400"
-                  //       }
-                  //    `}
-                  //    onDragOver={(e) => {
-                  //       e.preventDefault();
-                  //       e.stopPropagation();
-                  //       setRowDropTarget(`after-${rows.length - 1}`);
-                  //    }}
-                  //    onDrop={(e) => {
-                  //       e.preventDefault();
-                  //       e.stopPropagation();
-                  //       handleRowDrop(e, rows.length);
-                  //    }}
-                  // >
-                  //    <div className="text-center text-xs text-blue-400 py-1">
-                  //       Drop here to move to bottom
-                  //    </div>
-                  // </div>
-                  // )
-               }
             </div>
 
             {/* Grid overlay - positioned after all content, but don't show during row dragging */}

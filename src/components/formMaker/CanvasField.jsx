@@ -11,6 +11,10 @@ const CanvasField = ({
    isDragging = false,
    onDragStart,
    onDragEnd,
+   onFieldDragEnter,
+   onFieldDragLeave,
+   onDrop,
+   isSwapTarget = false,
 }) => {
    const fieldInfo = getFieldTypeInfo(field.type);
 
@@ -30,6 +34,39 @@ const CanvasField = ({
       onDragEnd?.();
    };
 
+   const handleDragEnter = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      // Only handle drag enter if we're not dragging this field itself
+      if (!isDragging) {
+         onFieldDragEnter?.(field.id);
+      }
+   };
+
+   const handleDragLeave = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      // Only trigger leave if we're actually leaving this element
+      if (!e.currentTarget.contains(e.relatedTarget)) {
+         onFieldDragLeave?.();
+      }
+   };
+
+   const handleDragOver = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      // Allow dropping only if we're not dragging this field itself
+      if (!isDragging) {
+         e.dataTransfer.dropEffect = "move";
+      }
+   };
+
+   const handleDrop = (e) => {
+      e.preventDefault();
+      // Call the parent's drop handler directly
+      onDrop?.(e);
+   };
+
    if (field.type === "spacer") {
       return (
          <div
@@ -37,11 +74,20 @@ const CanvasField = ({
             draggable
             onDragStart={handleDragStart}
             onDragEnd={handleDragEnd}
+            onDragEnter={handleDragEnter}
+            onDragLeave={handleDragLeave}
+            onDragOver={handleDragOver}
+            onDrop={handleDrop}
          >
             <div
-               className={`p-2 border-2 border-dashed border-gray-500 rounded-lg bg-gray-800/30 
+               className={`p-2 border-2 border-dashed rounded-lg bg-gray-800/30 
                            hover:border-purple-500 transition-all duration-200 min-h-[50px]
-                           ${isDragging ? "opacity-50 scale-95" : ""}`}
+                           ${isDragging ? "opacity-50 scale-95" : ""}
+                           ${
+                              isSwapTarget
+                                 ? "border-orange-400 bg-orange-500/20 border-solid"
+                                 : "border-gray-500"
+                           }`}
             >
                <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
@@ -86,11 +132,20 @@ const CanvasField = ({
             draggable
             onDragStart={handleDragStart}
             onDragEnd={handleDragEnd}
+            onDragEnter={handleDragEnter}
+            onDragLeave={handleDragLeave}
+            onDragOver={handleDragOver}
+            onDrop={handleDrop}
          >
             <div
-               className={`p-3 border border-blue-600 rounded-lg bg-blue-900/20 
+               className={`p-3 border rounded-lg bg-blue-900/20 
                            hover:border-blue-500 transition-all duration-200 min-h-[60px]
-                           ${isDragging ? "opacity-50 scale-95" : ""}`}
+                           ${isDragging ? "opacity-50 scale-95" : ""}
+                           ${
+                              isSwapTarget
+                                 ? "border-orange-400 bg-orange-500/20"
+                                 : "border-blue-600"
+                           }`}
             >
                <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2 flex-1">
@@ -134,11 +189,20 @@ const CanvasField = ({
          draggable
          onDragStart={handleDragStart}
          onDragEnd={handleDragEnd}
+         onDragEnter={handleDragEnter}
+         onDragLeave={handleDragLeave}
+         onDragOver={handleDragOver}
+         onDrop={handleDrop}
       >
          <div
-            className={`p-2 border border-gray-600 rounded-lg bg-gray-700 
+            className={`p-2 border rounded-lg bg-gray-700 
                         hover:border-blue-500 transition-all duration-200 min-h-[50px]
-                        ${isDragging ? "opacity-50 scale-95" : ""}`}
+                        ${isDragging ? "opacity-50 scale-95" : ""}
+                        ${
+                           isSwapTarget
+                              ? "border-orange-400 bg-orange-500/20"
+                              : "border-gray-600"
+                        }`}
          >
             <div className="flex items-center justify-between">
                <div className="flex items-center gap-2">
