@@ -214,7 +214,6 @@ const FormCanvas = ({
 
    const handleRowDrop = useCallback(
       (e, targetRowIndex) => {
-
          e.preventDefault();
          e.stopPropagation();
 
@@ -537,16 +536,16 @@ const FormCanvas = ({
 
          <div
             ref={canvasRef}
-            className="flex-1 p-4 pl-12 overflow-y-auto custom-scrollbar relative bg-blue-500"
+            className="flex-1 p-4 pl-12 overflow-y-auto custom-scrollbar relative"
             onDragOver={handleDragOver}
             onDragEnter={handleDragEnter}
             onDragLeave={handleDragLeave}
          >
-            <div className="space-y-4 relative z-20">
+            <div className="relative z-20 flex flex-col gap-3">
                {/* Drop zone before first row */}
                {/* {draggingRowIndex !== null && (
                   <div
-                     className={`h-4 mx-4 rounded border-2 border-dashed transition-colors grid place-items-center
+                     className={`h-4 mx-4 rounded border-2 border-dashed transition-colors
                         ${
                            rowDropTarget === "before-0"
                               ? "border-blue-400 bg-blue-400/20"
@@ -571,17 +570,15 @@ const FormCanvas = ({
                )} */}
 
                {rows.map((row, rowIndex) => (
-                  <div key={`row-container-${rowIndex}`}>
+                  <div className="relative" key={`row-container-${rowIndex}`}>
                      {/* Drop zone above each row (except first) */}
-                     {rowIndex > 0 &&
-                        draggingRowIndex !== null &&
+                     {draggingRowIndex !== null &&
                         draggingRowIndex !== rowIndex && (
                            <div
-                              className={`h-full -translate-y-2 mx-4 rounded border-2 border-dashed transition-colors grid place-items-center
+                              className={`absolute -left-8 top-0 w-8 h-full z-40 bg-blue-400/20 border border-blue-400/50 rounded transition-all
                                  ${
-                                    rowDropTarget === `before-${rowIndex}`
-                                       ? "border-blue-400 bg-blue-400/20"
-                                       : "border-blue-300/50 hover:border-blue-400"
+                                    rowDropTarget === `before-${rowIndex}` &&
+                                    "border-blue-400 bg-blue-400/60"
                                  }
                               `}
                               onDragOver={(e) => {
@@ -594,17 +591,13 @@ const FormCanvas = ({
                                  e.stopPropagation();
                                  handleRowDrop(e, rowIndex);
                               }}
-                           >
-                              <div className="text-center text-xs text-blue-400 py-1">
-                                 Drop here
-                              </div>
-                           </div>
+                           ></div>
                         )}
 
                      <div
                         className={`relative group ${
                            draggingRowIndex === rowIndex
-                              ? "opacity-30 scale-95 transform"
+                              ? "opacity-30 scale-95"
                               : ""
                         } ${
                            rowDropTarget === rowIndex
@@ -614,14 +607,14 @@ const FormCanvas = ({
                      >
                         {/* Row drag handle */}
                         <div
-                           className="absolute -left-8 top-0 bottom-0 flex items-center opacity-0 group-hover:opacity-100 transition-opacity z-30 bg-red-500"
+                           className="absolute -left-8 top-0 bottom-0 flex items-center opacity-0 group-hover:opacity-100 transition-opacity z-30"
                            draggable
                            onDragStart={(e) => handleRowDragStart(e, rowIndex)}
                            onDragEnd={handleRowDragEnd}
                            title="Drag to reorder row"
                         >
                            <div
-                              className={`p-2 h-full rounded cursor-grab active:cursor-grabbing border shadow-lg transition-colors grid place-items-center
+                              className={`p-2 h-full grid place-items-center rounded cursor-grab active:cursor-grabbing border shadow-lg transition-colors
                               ${
                                  draggingRowIndex === rowIndex
                                     ? "bg-blue-600 border-blue-500"
@@ -651,31 +644,33 @@ const FormCanvas = ({
                ))}
 
                {/* Drop zone after last row */}
-               {/* {draggingRowIndex !== null && (
-                  <div
-                     className={`h-4 mx-4 rounded border-2 border-dashed transition-colors grid place-items-center
-                        ${
-                           rowDropTarget === `after-${rows.length - 1}`
-                              ? "border-blue-400 bg-blue-400/20"
-                              : "border-blue-300/50 hover:border-blue-400"
-                        }
-                     `}
-                     onDragOver={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        setRowDropTarget(`after-${rows.length - 1}`);
-                     }}
-                     onDrop={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        handleRowDrop(e, rows.length);
-                     }}
-                  >
-                     <div className="text-center text-xs text-blue-400 py-1">
-                        Drop here to move to bottom
-                     </div>
-                  </div>
-               )} */}
+               {
+                  // draggingRowIndex !== null && (
+                  // <div
+                  //    className={`h-4 mx-4 rounded border-2 border-dashed transition-colors
+                  //       ${
+                  //          rowDropTarget === `after-${rows.length - 1}`
+                  //             ? "border-blue-400 bg-blue-400/20"
+                  //             : "border-blue-300/50 hover:border-blue-400"
+                  //       }
+                  //    `}
+                  //    onDragOver={(e) => {
+                  //       e.preventDefault();
+                  //       e.stopPropagation();
+                  //       setRowDropTarget(`after-${rows.length - 1}`);
+                  //    }}
+                  //    onDrop={(e) => {
+                  //       e.preventDefault();
+                  //       e.stopPropagation();
+                  //       handleRowDrop(e, rows.length);
+                  //    }}
+                  // >
+                  //    <div className="text-center text-xs text-blue-400 py-1">
+                  //       Drop here to move to bottom
+                  //    </div>
+                  // </div>
+                  // )
+               }
             </div>
 
             {/* Grid overlay - positioned after all content, but don't show during row dragging */}
