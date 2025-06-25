@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import {
    FiAlignCenter,
    FiCalendar,
@@ -24,9 +25,21 @@ const FieldEditor = ({
    onUpdateOption,
    onRemoveOption,
 }) => {
-   if (!isOpen || !field) return null;
+   // Local state for editing field
+   const [editField, setEditField] = useState(
+      field ? normalizeField(field) : null
+   );
 
-   const normalizedField = normalizeField(field);
+   // Sync local state with prop when field changes or editor opens
+   useEffect(() => {
+      if (isOpen && field) {
+         setEditField(normalizeField(field));
+      }
+   }, [isOpen, field]);
+
+   if (!isOpen || !editField) return null;
+
+   const normalizedField = editField; // For compatibility with rest of code
 
    const getFieldIcon = (type) => {
       const icons = {
@@ -52,6 +65,44 @@ const FieldEditor = ({
    const handleDelete = () => {
       onDelete(normalizedField.id);
       onClose();
+   };
+
+   // Generic handler for field property changes
+   const handleFieldChange = (updates) => {
+      setEditField((prev) => {
+         const updated = { ...prev, ...updates };
+         onUpdate(updated.id, updates); // Update parent immediately
+         return updated;
+      });
+   };
+
+   // Local handlers for options
+   const handleAddOption = (fieldId) => {
+      const newOptions = [
+         ...normalizedField.options,
+         {
+            value: `option_${normalizedField.options.length + 1}`,
+            label: `Option ${normalizedField.options.length + 1}`,
+         },
+      ];
+      setEditField((prev) => ({ ...prev, options: newOptions }));
+      onAddOption(fieldId);
+   };
+
+   const handleUpdateOption = (fieldId, optionIndex, updates) => {
+      const newOptions = normalizedField.options.map((opt, idx) =>
+         idx === optionIndex ? { ...opt, ...updates } : opt
+      );
+      setEditField((prev) => ({ ...prev, options: newOptions }));
+      onUpdateOption(fieldId, optionIndex, updates);
+   };
+
+   const handleRemoveOption = (fieldId, optionIndex) => {
+      const newOptions = normalizedField.options.filter(
+         (_, idx) => idx !== optionIndex
+      );
+      setEditField((prev) => ({ ...prev, options: newOptions }));
+      onRemoveOption(fieldId, optionIndex);
    };
 
    return (
@@ -102,9 +153,7 @@ const FieldEditor = ({
                               label="Title Text"
                               value={normalizedField.label}
                               onChange={(value) =>
-                                 onUpdate(normalizedField.id, {
-                                    label: value,
-                                 })
+                                 handleFieldChange({ label: value })
                               }
                               placeholder="Enter title text"
                               helperText="This is how your title will appear in the form"
@@ -128,9 +177,7 @@ const FieldEditor = ({
                                  label="Field Name"
                                  value={normalizedField.name}
                                  onChange={(value) =>
-                                    onUpdate(normalizedField.id, {
-                                       name: value,
-                                    })
+                                    handleFieldChange({ name: value })
                                  }
                                  placeholder="field_name"
                                  helperText="Used as the key in form data"
@@ -142,9 +189,7 @@ const FieldEditor = ({
                                  label="Field Label"
                                  value={normalizedField.label}
                                  onChange={(value) =>
-                                    onUpdate(normalizedField.id, {
-                                       label: value,
-                                    })
+                                    handleFieldChange({ label: value })
                                  }
                                  placeholder="Field Label"
                                  helperText="Displayed above the input"
@@ -156,9 +201,7 @@ const FieldEditor = ({
                                  label="Placeholder"
                                  value={normalizedField.placeholder}
                                  onChange={(value) =>
-                                    onUpdate(normalizedField.id, {
-                                       placeholder: value,
-                                    })
+                                    handleFieldChange({ placeholder: value })
                                  }
                                  placeholder="Enter placeholder text"
                                  helperText="Hint text inside the input"
@@ -178,9 +221,7 @@ const FieldEditor = ({
                                     label="Minimum Value"
                                     value={normalizedField.min}
                                     onChange={(value) =>
-                                       onUpdate(normalizedField.id, {
-                                          min: value,
-                                       })
+                                       handleFieldChange({ min: value })
                                     }
                                     placeholder="Min"
                                     width="w-full"
@@ -189,9 +230,7 @@ const FieldEditor = ({
                                     label="Maximum Value"
                                     value={normalizedField.max}
                                     onChange={(value) =>
-                                       onUpdate(normalizedField.id, {
-                                          max: value,
-                                       })
+                                       handleFieldChange({ max: value })
                                     }
                                     placeholder="Max"
                                     width="w-full"
@@ -200,9 +239,7 @@ const FieldEditor = ({
                                     label="Step"
                                     value={normalizedField.step}
                                     onChange={(value) =>
-                                       onUpdate(normalizedField.id, {
-                                          step: value,
-                                       })
+                                       handleFieldChange({ step: value })
                                     }
                                     placeholder="1"
                                     helperText="Increment value"
@@ -222,7 +259,7 @@ const FieldEditor = ({
                                  </h3>
                                  <button
                                     onClick={() =>
-                                       onAddOption(normalizedField.id)
+                                       handleAddOption(normalizedField.id)
                                     }
                                     className="flex items-center gap-2 px-3 py-2 bg-blue-600 hover:bg-blue-700 
                                              text-white rounded-lg transition-colors text-sm"
@@ -252,7 +289,7 @@ const FieldEditor = ({
                                                 placeholder="Option Value"
                                                 value={option.value}
                                                 onChange={(value) =>
-                                                   onUpdateOption(
+                                                   handleUpdateOption(
                                                       normalizedField.id,
                                                       index,
                                                       { value }
@@ -264,7 +301,7 @@ const FieldEditor = ({
                                                 placeholder="Option Label"
                                                 value={option.label}
                                                 onChange={(label) =>
-                                                   onUpdateOption(
+                                                   handleUpdateOption(
                                                       normalizedField.id,
                                                       index,
                                                       { label }
@@ -274,7 +311,7 @@ const FieldEditor = ({
                                              />
                                              <button
                                                 onClick={() =>
-                                                   onRemoveOption(
+                                                   handleRemoveOption(
                                                       normalizedField.id,
                                                       index
                                                    )
@@ -304,9 +341,7 @@ const FieldEditor = ({
                                     label="Helper Text"
                                     value={normalizedField.helperText}
                                     onChange={(value) =>
-                                       onUpdate(normalizedField.id, {
-                                          helperText: value,
-                                       })
+                                       handleFieldChange({ helperText: value })
                                     }
                                     placeholder="Optional helper text"
                                     helperText="Additional guidance for users"
@@ -320,7 +355,7 @@ const FieldEditor = ({
                                        id="required"
                                        checked={normalizedField.required}
                                        onChange={(e) =>
-                                          onUpdate(normalizedField.id, {
+                                          handleFieldChange({
                                              required: e.target.checked,
                                           })
                                        }

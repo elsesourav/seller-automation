@@ -1,3 +1,4 @@
+import * as FiIcons from "react-icons/fi";
 import { FiEdit2, FiMove, FiTrash2 } from "react-icons/fi";
 import { getFieldTypeInfo } from "../../utils/formMaker";
 
@@ -112,9 +113,7 @@ const CanvasField = ({
             icon: <FiMove className="w-4 h-4 text-gray-400 cursor-move" />,
             title: fieldInfo.label,
             titleClass: "text-sm font-medium text-white",
-            subtitle: `Width: ${getWidthLabel(field.width)}${
-               field.required ? " *" : ""
-            }`,
+            subtitle: `Width: ${getWidthLabel(field.width)}`,
             subtitleClass: "text-xs text-gray-400 text-nowrap",
             editColor: "text-blue-400 hover:text-blue-300 hover:bg-blue-900/20",
          };
@@ -122,6 +121,11 @@ const CanvasField = ({
    };
 
    const styles = getFieldStyles();
+
+   const IconComponent =
+      fieldInfo.icon && FiIcons[fieldInfo.icon]
+         ? FiIcons[fieldInfo.icon]
+         : null;
 
    return (
       <div
@@ -147,7 +151,12 @@ const CanvasField = ({
                >
                   {styles.icon}
                   <div className={`flex flex-col text-nowrap`}>
-                     <span className={styles.titleClass}>{styles.title}</span>
+                     <span className={styles.titleClass + " whitespace-nowrap"}>
+                        {IconComponent && (
+                           <IconComponent className="inline-block align-middle mr-1 text-base text-gray-400" />
+                        )}
+                        {field.label ? field.label : styles.title}
+                     </span>
                      <span className={styles.subtitleClass}>
                         {styles.subtitle}
                         {field.required && (

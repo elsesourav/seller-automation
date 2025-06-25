@@ -7,6 +7,8 @@ import FieldEditor from "../formMaker/FieldEditor";
 import FieldPalette from "../formMaker/FieldPalette";
 import FormCanvas from "../formMaker/FormCanvas";
 import "../formMaker/formMaker.css";
+import FormPreview from "../formMaker/FormPreview";
+import SchemaPreview from "../formMaker/SchemaPreview";
 
 /**
  * Modern FormMaker - Redesigned with left-right layout
@@ -96,7 +98,9 @@ const FormMaker = ({ isOpen, onClose }) => {
    }, []);
 
    // Get the current editing field from the fields array (to ensure it's always up-to-date)
-   const currentEditingField = editingField ? fields.find(f => f.id === editingField.id) : null;
+   const currentEditingField = editingField
+      ? fields.find((f) => f.id === editingField.id)
+      : null;
 
    // Close editor if the field no longer exists
    useEffect(() => {
@@ -301,6 +305,7 @@ const FormMaker = ({ isOpen, onClose }) => {
 
          {/* Field Editor Modal */}
          <FieldEditor
+            key={currentEditingField?.id} // Force re-render when field changes
             field={currentEditingField}
             isOpen={!!editingField}
             onClose={handleFieldEditorClose}
@@ -318,200 +323,6 @@ const FormMaker = ({ isOpen, onClose }) => {
             mousePosition={dragAndDrop.mousePosition}
          />
       </>
-   );
-};
-
-// Form Preview Component
-const FormPreview = ({ fields, formData, onFormDataChange, onBack }) => {
-   const handleInputChange = (fieldName, value) => {
-      onFormDataChange(fieldName, value);
-   };
-
-   return (
-      <div className="flex-1 flex flex-col">
-         <div className="p-4 border-b border-gray-700 flex items-center gap-4">
-            <button
-               onClick={onBack}
-               className="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white 
-                        rounded-lg transition-colors"
-            >
-               ← Back to Editor
-            </button>
-            <h3 className="text-lg font-semibold text-white">Form Preview</h3>
-         </div>
-
-         <div className="flex-1 p-6 overflow-y-auto custom-scrollbar">
-            <div className="max-w-2xl mx-auto">
-               <form className="space-y-6">
-                  {fields.map((field) => (
-                     <FormField
-                        key={field.id}
-                        field={field}
-                        value={formData[field.name] || ""}
-                        onChange={(value) =>
-                           handleInputChange(field.name, value)
-                        }
-                     />
-                  ))}
-
-                  {fields.length > 0 && (
-                     <div className="pt-4">
-                        <button
-                           type="button"
-                           className="w-full px-6 py-3 bg-blue-600 hover:bg-blue-700 
-                                    text-white font-medium rounded-lg transition-colors"
-                        >
-                           Submit Form
-                        </button>
-                     </div>
-                  )}
-               </form>
-            </div>
-         </div>
-      </div>
-   );
-};
-
-// Schema Preview Component
-const SchemaPreview = ({ fields, onBack }) => {
-   const schema = generateFormSchema(fields);
-
-   return (
-      <div className="flex-1 flex flex-col">
-         <div className="p-4 border-b border-gray-700 flex items-center gap-4">
-            <button
-               onClick={onBack}
-               className="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white 
-                        rounded-lg transition-colors"
-            >
-               ← Back to Editor
-            </button>
-            <h3 className="text-lg font-semibold text-white">Form Schema</h3>
-         </div>
-
-         <div className="flex-1 p-6 overflow-y-auto custom-scrollbar">
-            <pre
-               className="bg-gray-800 p-4 rounded-lg text-sm text-green-400 
-                          font-mono overflow-x-auto"
-            >
-               {JSON.stringify(schema, null, 2)}
-            </pre>
-         </div>
-      </div>
-   );
-};
-
-// Individual Form Field Component for Preview
-const FormField = ({ field, value, onChange }) => {
-   if (field.type === "hr") {
-      return <hr className="border-gray-600 my-4" />;
-   }
-
-   const handleChange = (e) => {
-      const newValue =
-         e.target.type === "checkbox"
-            ? e.target.checked
-               ? [...(value || []), e.target.value]
-               : (value || []).filter((v) => v !== e.target.value)
-            : e.target.value;
-      onChange(newValue);
-   };
-
-   return (
-      <div className="space-y-2">
-         {field.label && (
-            <label className="block text-sm font-medium text-white">
-               {field.label}
-               {field.required && <span className="text-red-400 ml-1">*</span>}
-            </label>
-         )}
-
-         {field.type === "text" && (
-            <input
-               type="text"
-               value={value}
-               onChange={handleChange}
-               placeholder={field.placeholder}
-               required={field.required}
-               className="w-full px-3 py-2 bg-gray-700 border border-gray-600 
-                        rounded-lg text-white placeholder-gray-400 
-                        focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-         )}
-
-         {field.type === "number" && (
-            <input
-               type="number"
-               value={value}
-               onChange={handleChange}
-               placeholder={field.placeholder}
-               min={field.min}
-               max={field.max}
-               step={field.step}
-               required={field.required}
-               className="w-full px-3 py-2 bg-gray-700 border border-gray-600 
-                        rounded-lg text-white placeholder-gray-400 
-                        focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-         )}
-
-         {field.type === "date" && (
-            <input
-               type="date"
-               value={value}
-               onChange={handleChange}
-               required={field.required}
-               className="w-full px-3 py-2 bg-gray-700 border border-gray-600 
-                        rounded-lg text-white 
-                        focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-         )}
-
-         {field.type === "select" && (
-            <select
-               value={value}
-               onChange={handleChange}
-               required={field.required}
-               className="w-full px-3 py-2 bg-gray-700 border border-gray-600 
-                        rounded-lg text-white 
-                        focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-               <option value="">
-                  {field.placeholder || "Select an option..."}
-               </option>
-               {field.options?.map((option, index) => (
-                  <option key={index} value={option.value}>
-                     {option.label}
-                  </option>
-               ))}
-            </select>
-         )}
-
-         {field.type === "multiple" && (
-            <div className="space-y-2">
-               {field.options?.map((option, index) => (
-                  <label
-                     key={index}
-                     className="flex items-center gap-2 text-white"
-                  >
-                     <input
-                        type="checkbox"
-                        value={option.value}
-                        checked={(value || []).includes(option.value)}
-                        onChange={handleChange}
-                        className="rounded bg-gray-700 border-gray-600 text-blue-600 
-                                 focus:ring-blue-500 focus:ring-2"
-                     />
-                     {option.label}
-                  </label>
-               ))}
-            </div>
-         )}
-
-         {field.helperText && (
-            <p className="text-sm text-gray-400">{field.helperText}</p>
-         )}
-      </div>
    );
 };
 
