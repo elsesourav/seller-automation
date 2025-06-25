@@ -16,6 +16,16 @@ const CanvasField = ({
    onDrop,
    isSwapTarget = false,
 }) => {
+   const getWidthLabel = (width) => {
+      const labels = {
+         full: "100%",
+         "three-fourths": "75%",
+         half: "50%",
+         fourth: "25%",
+      };
+      return labels[width] || width;
+   };
+
    const fieldInfo = getFieldTypeInfo(field.type);
 
    const handleDragStart = (e) => {
@@ -67,121 +77,54 @@ const CanvasField = ({
       onDrop?.(e);
    };
 
-   if (field.type === "spacer") {
-      return (
-         <div
-            className="relative group w-full"
-            draggable
-            onDragStart={handleDragStart}
-            onDragEnd={handleDragEnd}
-            onDragEnter={handleDragEnter}
-            onDragLeave={handleDragLeave}
-            onDragOver={handleDragOver}
-            onDrop={handleDrop}
-         >
-            <div
-               className={`p-2 border-2 border-dashed rounded-lg bg-gray-800/30 
-                           hover:border-purple-500 transition-all duration-200 min-h-[50px]
-                           ${isDragging ? "opacity-50 scale-95" : ""}
-                           ${
-                              isSwapTarget
-                                 ? "border-orange-400 bg-orange-500/20 border-solid"
-                                 : "border-gray-500"
-                           }`}
-            >
-               <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                     <FiMove className="w-4 h-4 text-gray-400 cursor-move" />
-                     <div className="flex flex-col">
-                        <span className="text-sm font-medium text-gray-300">
-                           Spacer Field
-                        </span>
-                        <span className="text-xs text-gray-500">
-                           Width: {getWidthLabel(field.width)} • Empty space
-                        </span>
-                     </div>
-                  </div>
-                  <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                     <button
-                        onClick={() => onEdit(field)}
-                        className="p-1 text-purple-400 hover:text-purple-300 
-                                 hover:bg-purple-900/20 rounded"
-                        title="Edit field"
-                     >
-                        <FiEdit2 className="w-3 h-3" />
-                     </button>
-                     <button
-                        onClick={() => onDelete(field.id)}
-                        className="p-1 text-red-400 hover:text-red-300 
-                                 hover:bg-red-900/20 rounded"
-                        title="Delete field"
-                     >
-                        <FiTrash2 className="w-3 h-3" />
-                     </button>
-                  </div>
-               </div>
-            </div>
-         </div>
-      );
-   }
+   // Dynamic styling based on field type
+   const getFieldStyles = () => {
+      if (field.type === "spacer") {
+         return {
+            container:
+               "p-2 border-2 border-dashed rounded-lg bg-gray-800/30 hover:border-purple-500 transition-all duration-200 min-h-[50px]",
+            baseBorder: "border-gray-500",
+            swapBorder: "border-orange-400 bg-orange-500/20 border-solid",
+            icon: <FiMove className="w-4 h-4 text-gray-400 cursor-move" />,
+            title: "Spacer Field",
+            titleClass: "text-sm font-medium text-gray-300",
+            subtitle: `Width: ${getWidthLabel(field.width)}`,
+            subtitleClass: "text-xs text-nowrap text-gray-500",
+            editColor:
+               "text-purple-400 hover:text-purple-300 hover:bg-purple-900/20",
+         };
+      } else if (field.type === "title") {
+         return {
+            container:
+               "p-2 border rounded-lg bg-blue-900/20 hover:border-blue-500 transition-all duration-200 min-h-[60px]",
+            baseBorder: "border-blue-600",
+            swapBorder: "border-orange-400 bg-orange-500/20",
+            icon: <FiMove className="w-4 h-4 text-gray-400 cursor-move" />,
+            title: field.label || "Title Header",
+            titleClass: "text-md font-bold text-blue-300",
+            subtitle: `Width: ${getWidthLabel(field.width)}`,
+            subtitleClass: "text-xs text-nowrap text-gray-400",
+            editColor: "text-blue-400 hover:text-blue-300 hover:bg-blue-900/20",
+         };
+      } else {
+         return {
+            container:
+               "p-2 border rounded-lg bg-gray-700 hover:border-blue-500 transition-all duration-200 min-h-[50px]",
+            baseBorder: "border-gray-600",
+            swapBorder: "border-orange-400 bg-orange-500/20",
+            icon: <FiMove className="w-4 h-4 text-gray-400 cursor-move" />,
+            title: fieldInfo.label,
+            titleClass: "text-sm font-medium text-white",
+            subtitle: `Width: ${getWidthLabel(field.width)}${
+               field.required ? " *" : ""
+            }`,
+            subtitleClass: "text-xs text-gray-400 text-nowrap",
+            editColor: "text-blue-400 hover:text-blue-300 hover:bg-blue-900/20",
+         };
+      }
+   };
 
-   if (field.type === "title") {
-      return (
-         <div
-            className="relative group w-full"
-            draggable
-            onDragStart={handleDragStart}
-            onDragEnd={handleDragEnd}
-            onDragEnter={handleDragEnter}
-            onDragLeave={handleDragLeave}
-            onDragOver={handleDragOver}
-            onDrop={handleDrop}
-         >
-            <div
-               className={`p-3 border rounded-lg bg-blue-900/20 
-                           hover:border-blue-500 transition-all duration-200 min-h-[60px]
-                           ${isDragging ? "opacity-50 scale-95" : ""}
-                           ${
-                              isSwapTarget
-                                 ? "border-orange-400 bg-orange-500/20"
-                                 : "border-blue-600"
-                           }`}
-            >
-               <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2 flex-1">
-                     <FiMove className="w-4 h-4 text-gray-400 cursor-move" />
-                     <div className="flex flex-col flex-1">
-                        <span className="text-lg font-bold text-blue-300">
-                           {field.label || "Title Header"}
-                        </span>
-                        <span className="text-xs text-gray-400">
-                           Width: {getWidthLabel(field.width)} • Header title
-                        </span>
-                     </div>
-                  </div>
-                  <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                     <button
-                        onClick={() => onEdit(field)}
-                        className="p-1 text-blue-400 hover:text-blue-300 
-                                 hover:bg-blue-900/20 rounded"
-                        title="Edit title"
-                     >
-                        <FiEdit2 className="w-3 h-3" />
-                     </button>
-                     <button
-                        onClick={() => onDelete(field.id)}
-                        className="p-1 text-red-400 hover:text-red-300 
-                                 hover:bg-red-900/20 rounded"
-                        title="Delete title"
-                     >
-                        <FiTrash2 className="w-3 h-3" />
-                     </button>
-                  </div>
-               </div>
-            </div>
-         </div>
-      );
-   }
+   const styles = getFieldStyles();
 
    return (
       <div
@@ -195,24 +138,21 @@ const CanvasField = ({
          onDrop={handleDrop}
       >
          <div
-            className={`p-2 border rounded-lg bg-gray-700 
-                        hover:border-blue-500 transition-all duration-200 min-h-[50px]
-                        ${isDragging ? "opacity-50 scale-95" : ""}
-                        ${
-                           isSwapTarget
-                              ? "border-orange-400 bg-orange-500/20"
-                              : "border-gray-600"
-                        }`}
+            className={`${styles.container} ${
+               isDragging ? "opacity-50 scale-95" : ""
+            } ${isSwapTarget ? styles.swapBorder : styles.baseBorder}`}
          >
             <div className="flex items-center justify-between">
-               <div className="flex items-center gap-2">
-                  <FiMove className="w-4 h-4 text-gray-400 cursor-move" />
-                  <div className="flex flex-col">
-                     <span className="text-sm font-medium text-white">
-                        {fieldInfo.label}
-                     </span>
-                     <span className="text-xs text-gray-400">
-                        Width: {getWidthLabel(field.width)}
+               <div
+                  className={`flex items-center gap-2 ${
+                     field.type === "title" ? "flex-1" : ""
+                  }`}
+               >
+                  {styles.icon}
+                  <div className={`flex flex-col text-nowrap`}>
+                     <span className={styles.titleClass}>{styles.title}</span>
+                     <span className={styles.subtitleClass}>
+                        {styles.subtitle}
                         {field.required && (
                            <span className="text-red-400 ml-1">*</span>
                         )}
@@ -222,17 +162,19 @@ const CanvasField = ({
                <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                   <button
                      onClick={() => onEdit(field)}
-                     className="p-1 text-blue-400 hover:text-blue-300 
-                              hover:bg-blue-900/20 rounded"
-                     title="Edit field"
+                     className={`p-1 ${styles.editColor} rounded`}
+                     title={
+                        field.type === "title" ? "Edit title" : "Edit field"
+                     }
                   >
                      <FiEdit2 className="w-3 h-3" />
                   </button>
                   <button
                      onClick={() => onDelete(field.id)}
-                     className="p-1 text-red-400 hover:text-red-300 
-                              hover:bg-red-900/20 rounded"
-                     title="Delete field"
+                     className="p-1 text-red-400 hover:text-red-300 hover:bg-red-900/20 rounded"
+                     title={
+                        field.type === "title" ? "Delete title" : "Delete field"
+                     }
                   >
                      <FiTrash2 className="w-3 h-3" />
                   </button>
@@ -241,16 +183,6 @@ const CanvasField = ({
          </div>
       </div>
    );
-};
-
-const getWidthLabel = (width) => {
-   const labels = {
-      full: "Full (100%)",
-      "three-fourths": "3/4 (75%)",
-      half: "1/2 (50%)",
-      fourth: "1/4 (25%)",
-   };
-   return labels[width] || width;
 };
 
 export default CanvasField;

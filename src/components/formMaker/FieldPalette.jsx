@@ -79,16 +79,13 @@ const FieldPalette = () => {
                            <div className="text-sm font-medium text-white">
                               {fieldType.label}
                            </div>
-                           <div className="text-xs text-gray-400">
-                              {getFieldDescription(fieldType.value)}
-                           </div>
-                        </div>
-                     </div>
 
-                     {/* Drag indicator */}
-                     <div className="mt-2 flex justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                        <div className="text-xs text-blue-400 font-medium">
-                           ⇈ Drag to canvas
+                           {/* Drag indicator */}
+                           <div className="flex items-center opacity-0 group-hover:opacity-100 transition-opacity text-nowrap">
+                              <div className="text-xs text-blue-400 font-medium">
+                                 {getFieldDescription(fieldType.value)}
+                              </div>
+                           </div>
                         </div>
                      </div>
                   </div>
@@ -103,7 +100,7 @@ const getFieldDescription = (type) => {
    const descriptions = {
       text: "Single line text input",
       title: "Header title for sections",
-      number: "Numeric input with validation",
+      number: "Numeric with validation",
       date: "Date picker input",
       select: "Dropdown selection",
       multiple: "Multiple choice options",

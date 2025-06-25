@@ -2,11 +2,11 @@ import { useCallback, useEffect, useState } from "react";
 import { FiCode, FiDownload, FiEye, FiSave, FiX } from "react-icons/fi";
 import { useDragAndDrop } from "../../hooks/useDragAndDrop";
 import { createNewField, generateFormSchema } from "../../utils/formMaker";
-import DragPreview from "../formMaker/DragPreview";
-import FieldEditor from "../formMaker/FieldEditor";
-import FieldPalette from "../formMaker/FieldPalette";
-import FormCanvas from "../formMaker/FormCanvas";
 import "../formMaker/formMaker.css";
+import DragPreview from "./DragPreview";
+import FieldEditor from "./FieldEditor";
+import FieldPalette from "./FieldPalette";
+import FormCanvas from "./FormCanvas";
 
 /**
  * Modern FormMaker - Redesigned with left-right layout
@@ -192,10 +192,7 @@ const FormMaker = ({ isOpen, onClose }) => {
             />
 
             {/* Modal Container */}
-            <div
-               className="relative bg-gray-900 w-full max-w-7xl mx-auto my-4 
-                          rounded-2xl shadow-2xl border border-gray-700 flex flex-col"
-            >
+            <div className="relative bg-gray-900 w-full max-w-7xl mx-auto my-4 rounded-2xl shadow-2xl border border-gray-700 flex flex-col overflow-hidden">
                {/* Header */}
                <div className="flex-shrink-0 border-b border-gray-700">
                   <div className="flex items-center justify-between p-4">

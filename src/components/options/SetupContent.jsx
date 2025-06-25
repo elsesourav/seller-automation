@@ -1,4 +1,5 @@
 import { useState } from "react";
+import FormMaker from "../formMaker/FormMaker";
 import {
    DateInput,
    InputWithOverlay,
@@ -7,7 +8,6 @@ import {
    SelectInput,
    TextInput,
 } from "./../inputs";
-import FormMaker from "./FormMaker";
 
 export default function SetupContent() {
    const [formData, setFormData] = useState({
