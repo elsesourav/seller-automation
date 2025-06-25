@@ -1,9 +1,6 @@
 import { FiEdit2, FiMove, FiTrash2 } from "react-icons/fi";
 import { getFieldTypeInfo } from "../../utils/formMaker";
 
-/**
- * Individual field component rendered in the canvas
- */
 const CanvasField = ({
    field,
    onEdit,
@@ -160,15 +157,17 @@ const CanvasField = ({
                   </div>
                </div>
                <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <button
-                     onClick={() => onEdit(field)}
-                     className={`p-1 ${styles.editColor} rounded`}
-                     title={
-                        field.type === "title" ? "Edit title" : "Edit field"
-                     }
-                  >
-                     <FiEdit2 className="w-3 h-3" />
-                  </button>
+                  {field.type !== "spacer" && (
+                     <button
+                        onClick={() => onEdit(field)}
+                        className={`p-1 ${styles.editColor} rounded`}
+                        title={
+                           field.type === "title" ? "Edit title" : "Edit field"
+                        }
+                     >
+                        <FiEdit2 className="w-3 h-3" />
+                     </button>
+                  )}
                   <button
                      onClick={() => onDelete(field.id)}
                      className="p-1 text-red-400 hover:text-red-300 hover:bg-red-900/20 rounded"

@@ -1,23 +1,17 @@
 import {
    FiAlignCenter,
-   FiBox,
    FiCalendar,
    FiChevronDown,
    FiHash,
    FiList,
-   FiMinus,
    FiPlus,
    FiSave,
    FiTrash2,
    FiType,
    FiX,
 } from "react-icons/fi";
-import {
-   FIELD_TYPES,
-   WIDTH_OPTIONS,
-   normalizeField,
-} from "../../utils/formMaker";
-import { NumberInput, SelectInput, TextInput, TitleInput } from "../inputs";
+import { normalizeField } from "../../utils/formMaker";
+import { NumberInput, TextInput, TitleInput } from "../inputs";
 
 const FieldEditor = ({
    field,
@@ -42,8 +36,6 @@ const FieldEditor = ({
          date: FiCalendar,
          select: FiChevronDown,
          multiple: FiList,
-         spacer: FiBox,
-         hr: FiMinus,
       };
       const IconComponent = icons[type] || FiType;
       return <IconComponent className="w-5 h-5" />;
@@ -80,20 +72,10 @@ const FieldEditor = ({
                   </div>
                   <div>
                      <h2 className="text-xl font-bold text-white">
-                        Edit{" "}
-                        {normalizedField.type === "hr"
-                           ? "Divider"
-                           : normalizedField.type === "spacer"
-                           ? "Spacer"
-                           : "Field"}
+                        Edit Field
                      </h2>
                      <p className="text-gray-400 text-sm">
-                        Configure your{" "}
-                        {normalizedField.type === "hr"
-                           ? "horizontal divider"
-                           : normalizedField.type === "spacer"
-                           ? "spacer element"
-                           : "form field"}
+                        Configure your form field
                      </p>
                   </div>
                </div>
@@ -109,377 +91,253 @@ const FieldEditor = ({
             {/* Content */}
             <div className="flex-1 overflow-y-auto p-6">
                <div className="space-y-6">
-                  {normalizedField.type !== "hr" &&
-                     normalizedField.type !== "spacer" && (
-                        <>
-                           {/* Basic Settings */}
-                           <div className="bg-gray-700/30 rounded-xl p-6 border border-gray-600">
-                              <h3 className="text-lg font-semibold text-white mb-4">
-                                 Basic Settings
-                              </h3>
-                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                 {/* Field Type */}
-                                 <SelectInput
-                                    label="Field Type"
-                                    value={normalizedField.type}
-                                    onChange={(value) =>
-                                       onUpdate(normalizedField.id, {
-                                          type: value,
-                                       })
-                                    }
-                                    options={FIELD_TYPES.filter(
-                                       (t) =>
-                                          t.value !== "hr" &&
-                                          t.value !== "spacer"
-                                    )}
-                                    width="w-full"
-                                 />
-
-                                 {/* Field Name */}
-                                 <TextInput
-                                    label="Field Name"
-                                    value={normalizedField.name}
-                                    onChange={(value) =>
-                                       onUpdate(normalizedField.id, {
-                                          name: value,
-                                       })
-                                    }
-                                    placeholder="field_name"
-                                    helperText="Used as the key in form data"
-                                    width="w-full"
-                                 />
-
-                                 {/* Field Label */}
-                                 <TextInput
-                                    label="Field Label"
-                                    value={normalizedField.label}
-                                    onChange={(value) =>
-                                       onUpdate(normalizedField.id, {
-                                          label: value,
-                                       })
-                                    }
-                                    placeholder="Field Label"
-                                    helperText="Displayed above the input"
-                                    width="w-full"
-                                 />
-
-                                 {/* Placeholder */}
-                                 <TextInput
-                                    label="Placeholder"
-                                    value={normalizedField.placeholder}
-                                    onChange={(value) =>
-                                       onUpdate(normalizedField.id, {
-                                          placeholder: value,
-                                       })
-                                    }
-                                    placeholder="Enter placeholder text"
-                                    helperText="Hint text inside the input"
-                                    width="w-full"
-                                 />
-                              </div>
-                           </div>
-
-                           {/* Number Field Settings */}
-                           {normalizedField.type === "number" && (
-                              <div className="bg-gray-700/30 rounded-xl p-6 border border-gray-600">
-                                 <h3 className="text-lg font-semibold text-white mb-4">
-                                    Number Validation
-                                 </h3>
-                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                    <NumberInput
-                                       label="Minimum Value"
-                                       value={normalizedField.min}
-                                       onChange={(value) =>
-                                          onUpdate(normalizedField.id, {
-                                             min: value,
-                                          })
-                                       }
-                                       placeholder="Min"
-                                       width="w-full"
-                                    />
-                                    <NumberInput
-                                       label="Maximum Value"
-                                       value={normalizedField.max}
-                                       onChange={(value) =>
-                                          onUpdate(normalizedField.id, {
-                                             max: value,
-                                          })
-                                       }
-                                       placeholder="Max"
-                                       width="w-full"
-                                    />
-                                    <NumberInput
-                                       label="Step"
-                                       value={normalizedField.step}
-                                       onChange={(value) =>
-                                          onUpdate(normalizedField.id, {
-                                             step: value,
-                                          })
-                                       }
-                                       placeholder="1"
-                                       helperText="Increment value"
-                                       width="w-full"
-                                    />
-                                 </div>
-                              </div>
-                           )}
-
-                           {/* Title Field Settings */}
-                           {normalizedField.type === "title" && (
-                              <div className="bg-gray-700/30 rounded-xl p-6 border border-gray-600">
-                                 <h3 className="text-lg font-semibold text-white mb-4">
-                                    Title Preview
-                                 </h3>
-                                 <div className="space-y-4">
-                                    <TitleInput
-                                       label="Preview Title"
-                                       value={normalizedField.label}
-                                       onChange={(value) =>
-                                          onUpdate(normalizedField.id, {
-                                             label: value,
-                                          })
-                                       }
-                                       placeholder={normalizedField.placeholder}
-                                       helperText="This is how your title will appear in the form"
-                                       width="w-full"
-                                    />
-                                    <div className="text-sm text-gray-400">
-                                       <p>
-                                          • Title fields display as large
-                                          headers
-                                       </p>
-                                       <p>
-                                          • Use for section dividers and form
-                                          headings
-                                       </p>
-                                       <p>
-                                          • Can be styled with different widths
-                                       </p>
-                                    </div>
-                                 </div>
-                              </div>
-                           )}
-
-                           {/* Options for Select/Multiple */}
-                           {(normalizedField.type === "select" ||
-                              normalizedField.type === "multiple") && (
-                              <div className="bg-gray-700/30 rounded-xl p-6 border border-gray-600">
-                                 <div className="flex items-center justify-between mb-4">
-                                    <h3 className="text-lg font-semibold text-white">
-                                       Options
-                                    </h3>
-                                    <button
-                                       onClick={() =>
-                                          onAddOption(normalizedField.id)
-                                       }
-                                       className="flex items-center gap-2 px-3 py-2 bg-blue-600 hover:bg-blue-700 
-                                             text-white rounded-lg transition-colors text-sm"
-                                    >
-                                       <FiPlus className="w-4 h-4" />
-                                       Add Option
-                                    </button>
-                                 </div>
-
-                                 {normalizedField.options.length === 0 ? (
-                                    <div className="text-center py-8 text-gray-400">
-                                       <FiList className="w-8 h-8 mx-auto mb-2" />
-                                       <p>No options added yet</p>
-                                    </div>
-                                 ) : (
-                                    <div className="space-y-3">
-                                       {normalizedField.options.map(
-                                          (option, index) => (
-                                             <div
-                                                key={index}
-                                                className="flex items-center gap-3 p-3 bg-gray-600/30 rounded-lg"
-                                             >
-                                                <span className="text-gray-400 text-sm font-mono w-8">
-                                                   {index + 1}
-                                                </span>
-                                                <TextInput
-                                                   placeholder="Option Value"
-                                                   value={option.value}
-                                                   onChange={(value) =>
-                                                      onUpdateOption(
-                                                         normalizedField.id,
-                                                         index,
-                                                         { value }
-                                                      )
-                                                   }
-                                                   width="flex-1"
-                                                />
-                                                <TextInput
-                                                   placeholder="Option Label"
-                                                   value={option.label}
-                                                   onChange={(label) =>
-                                                      onUpdateOption(
-                                                         normalizedField.id,
-                                                         index,
-                                                         { label }
-                                                      )
-                                                   }
-                                                   width="flex-1"
-                                                />
-                                                <button
-                                                   onClick={() =>
-                                                      onRemoveOption(
-                                                         normalizedField.id,
-                                                         index
-                                                      )
-                                                   }
-                                                   className="p-2 text-red-400 hover:text-red-300 hover:bg-red-500/10 
-                                                      rounded-lg transition-colors"
-                                                >
-                                                   <FiTrash2 className="w-4 h-4" />
-                                                </button>
-                                             </div>
-                                          )
-                                       )}
-                                    </div>
-                                 )}
-                              </div>
-                           )}
-
-                           {/* Additional Settings - Only for input fields */}
-                           {normalizedField.type !== "title" &&
-                              normalizedField.type !== "spacer" && (
-                                 <div className="bg-gray-700/30 rounded-xl p-6 border border-gray-600">
-                                    <h3 className="text-lg font-semibold text-white mb-4">
-                                       Additional Settings
-                                    </h3>
-                                    <div className="space-y-4">
-                                       {/* Helper Text */}
-                                       <TextInput
-                                          label="Helper Text"
-                                          value={normalizedField.helperText}
-                                          onChange={(value) =>
-                                             onUpdate(normalizedField.id, {
-                                                helperText: value,
-                                             })
-                                          }
-                                          placeholder="Optional helper text"
-                                          helperText="Additional guidance for users"
-                                          width="w-full"
-                                       />
-
-                                       {/* Required Toggle */}
-                                       <div className="flex items-center gap-3">
-                                          <input
-                                             type="checkbox"
-                                             id="required"
-                                             checked={normalizedField.required}
-                                             onChange={(e) =>
-                                                onUpdate(normalizedField.id, {
-                                                   required: e.target.checked,
-                                                })
-                                             }
-                                             className="w-4 h-4 text-blue-600 bg-gray-700 border-gray-600 
-                                                rounded focus:ring-blue-500 focus:ring-2"
-                                          />
-                                          <label
-                                             htmlFor="required"
-                                             className="text-white text-sm font-medium"
-                                          >
-                                             Required field
-                                          </label>
-                                       </div>
-                                    </div>
-                                 </div>
-                              )}
-                        </>
-                     )}
-
-                  {/* Width Configuration - Available for all field types except HR */}
-                  {normalizedField.type !== "hr" && (
+                  {/* Title Field Settings - Show for title fields */}
+                  {normalizedField.type === "title" && (
                      <div className="bg-gray-700/30 rounded-xl p-6 border border-gray-600">
                         <h3 className="text-lg font-semibold text-white mb-4">
-                           Layout & Width
+                           Title Settings
                         </h3>
                         <div className="space-y-4">
-                           <div>
-                              <label className="block text-sm font-medium text-gray-300 mb-3">
-                                 Field Width
-                              </label>
-                              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                                 {WIDTH_OPTIONS.map((option) => (
-                                    <button
-                                       key={option.value}
-                                       onClick={() =>
+                           <TitleInput
+                              label="Title Text"
+                              value={normalizedField.label}
+                              onChange={(value) =>
+                                 onUpdate(normalizedField.id, {
+                                    label: value,
+                                 })
+                              }
+                              placeholder="Enter title text"
+                              helperText="This is how your title will appear in the form"
+                              width="w-full"
+                           />
+                        </div>
+                     </div>
+                  )}
+
+                  {/* Regular Field Settings - Show for non-title fields */}
+                  {normalizedField.type !== "title" && (
+                     <>
+                        {/* Basic Settings */}
+                        <div className="bg-gray-700/30 rounded-xl p-6 border border-gray-600">
+                           <h3 className="text-lg font-semibold text-white mb-4">
+                              Basic Settings
+                           </h3>
+                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              {/* Field Name */}
+                              <TextInput
+                                 label="Field Name"
+                                 value={normalizedField.name}
+                                 onChange={(value) =>
+                                    onUpdate(normalizedField.id, {
+                                       name: value,
+                                    })
+                                 }
+                                 placeholder="field_name"
+                                 helperText="Used as the key in form data"
+                                 width="w-full"
+                              />
+
+                              {/* Field Label */}
+                              <TextInput
+                                 label="Field Label"
+                                 value={normalizedField.label}
+                                 onChange={(value) =>
+                                    onUpdate(normalizedField.id, {
+                                       label: value,
+                                    })
+                                 }
+                                 placeholder="Field Label"
+                                 helperText="Displayed above the input"
+                                 width="w-full"
+                              />
+
+                              {/* Placeholder */}
+                              <TextInput
+                                 label="Placeholder"
+                                 value={normalizedField.placeholder}
+                                 onChange={(value) =>
+                                    onUpdate(normalizedField.id, {
+                                       placeholder: value,
+                                    })
+                                 }
+                                 placeholder="Enter placeholder text"
+                                 helperText="Hint text inside the input"
+                                 width="w-full"
+                              />
+                           </div>
+                        </div>
+
+                        {/* Number Field Settings */}
+                        {normalizedField.type === "number" && (
+                           <div className="bg-gray-700/30 rounded-xl p-6 border border-gray-600">
+                              <h3 className="text-lg font-semibold text-white mb-4">
+                                 Number Validation
+                              </h3>
+                              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                 <NumberInput
+                                    label="Minimum Value"
+                                    value={normalizedField.min}
+                                    onChange={(value) =>
+                                       onUpdate(normalizedField.id, {
+                                          min: value,
+                                       })
+                                    }
+                                    placeholder="Min"
+                                    width="w-full"
+                                 />
+                                 <NumberInput
+                                    label="Maximum Value"
+                                    value={normalizedField.max}
+                                    onChange={(value) =>
+                                       onUpdate(normalizedField.id, {
+                                          max: value,
+                                       })
+                                    }
+                                    placeholder="Max"
+                                    width="w-full"
+                                 />
+                                 <NumberInput
+                                    label="Step"
+                                    value={normalizedField.step}
+                                    onChange={(value) =>
+                                       onUpdate(normalizedField.id, {
+                                          step: value,
+                                       })
+                                    }
+                                    placeholder="1"
+                                    helperText="Increment value"
+                                    width="w-full"
+                                 />
+                              </div>
+                           </div>
+                        )}
+
+                        {/* Options for Select/Multiple */}
+                        {(normalizedField.type === "select" ||
+                           normalizedField.type === "multiple") && (
+                           <div className="bg-gray-700/30 rounded-xl p-6 border border-gray-600">
+                              <div className="flex items-center justify-between mb-4">
+                                 <h3 className="text-lg font-semibold text-white">
+                                    Options
+                                 </h3>
+                                 <button
+                                    onClick={() =>
+                                       onAddOption(normalizedField.id)
+                                    }
+                                    className="flex items-center gap-2 px-3 py-2 bg-blue-600 hover:bg-blue-700 
+                                             text-white rounded-lg transition-colors text-sm"
+                                 >
+                                    <FiPlus className="w-4 h-4" />
+                                    Add Option
+                                 </button>
+                              </div>
+
+                              {normalizedField.options.length === 0 ? (
+                                 <div className="text-center py-8 text-gray-400">
+                                    <FiList className="w-8 h-8 mx-auto mb-2" />
+                                    <p>No options added yet</p>
+                                 </div>
+                              ) : (
+                                 <div className="space-y-3">
+                                    {normalizedField.options.map(
+                                       (option, index) => (
+                                          <div
+                                             key={index}
+                                             className="flex items-center gap-3 p-3 bg-gray-600/30 rounded-lg"
+                                          >
+                                             <span className="text-gray-400 text-sm font-mono w-8">
+                                                {index + 1}
+                                             </span>
+                                             <TextInput
+                                                placeholder="Option Value"
+                                                value={option.value}
+                                                onChange={(value) =>
+                                                   onUpdateOption(
+                                                      normalizedField.id,
+                                                      index,
+                                                      { value }
+                                                   )
+                                                }
+                                                width="flex-1"
+                                             />
+                                             <TextInput
+                                                placeholder="Option Label"
+                                                value={option.label}
+                                                onChange={(label) =>
+                                                   onUpdateOption(
+                                                      normalizedField.id,
+                                                      index,
+                                                      { label }
+                                                   )
+                                                }
+                                                width="flex-1"
+                                             />
+                                             <button
+                                                onClick={() =>
+                                                   onRemoveOption(
+                                                      normalizedField.id,
+                                                      index
+                                                   )
+                                                }
+                                                className="p-2 text-red-400 hover:text-red-300 hover:bg-red-500/10 
+                                                      rounded-lg transition-colors"
+                                             >
+                                                <FiTrash2 className="w-4 h-4" />
+                                             </button>
+                                          </div>
+                                       )
+                                    )}
+                                 </div>
+                              )}
+                           </div>
+                        )}
+
+                        {/* Additional Settings - Only for input fields */}
+                        {normalizedField.type !== "title" && (
+                           <div className="bg-gray-700/30 rounded-xl p-6 border border-gray-600">
+                              <h3 className="text-lg font-semibold text-white mb-4">
+                                 Additional Settings
+                              </h3>
+                              <div className="space-y-4">
+                                 {/* Helper Text */}
+                                 <TextInput
+                                    label="Helper Text"
+                                    value={normalizedField.helperText}
+                                    onChange={(value) =>
+                                       onUpdate(normalizedField.id, {
+                                          helperText: value,
+                                       })
+                                    }
+                                    placeholder="Optional helper text"
+                                    helperText="Additional guidance for users"
+                                    width="w-full"
+                                 />
+
+                                 {/* Required Toggle */}
+                                 <div className="flex items-center gap-3">
+                                    <input
+                                       type="checkbox"
+                                       id="required"
+                                       checked={normalizedField.required}
+                                       onChange={(e) =>
                                           onUpdate(normalizedField.id, {
-                                             width: option.value,
+                                             required: e.target.checked,
                                           })
                                        }
-                                       className={`p-3 rounded-lg border transition-all text-center
-                                          ${
-                                             normalizedField.width ===
-                                             option.value
-                                                ? "border-blue-500 bg-blue-500/20 text-blue-300"
-                                                : "border-gray-600 bg-gray-700/50 text-gray-300 hover:border-gray-500"
-                                          }`}
+                                       className="w-4 h-4 text-blue-600 bg-gray-700 border-gray-600 
+                                                rounded focus:ring-blue-500 focus:ring-2"
+                                    />
+                                    <label
+                                       htmlFor="required"
+                                       className="text-white text-sm font-medium"
                                     >
-                                       <div className="text-xs font-medium mb-1">
-                                          {option.fraction}
-                                       </div>
-                                       <div className="text-xs text-gray-400">
-                                          {option.label.replace(" Width", "")}
-                                       </div>
-                                    </button>
-                                 ))}
+                                       Required field
+                                    </label>
+                                 </div>
                               </div>
-                              <p className="text-xs text-gray-500 mt-2">
-                                 {normalizedField.type === "spacer"
-                                    ? "Configure how much space this spacer takes up in the row"
-                                    : "Choose how much horizontal space this field occupies"}
-                              </p>
                            </div>
-                        </div>
-                     </div>
-                  )}
-
-                  {/* HR Settings */}
-                  {normalizedField.type === "hr" && (
-                     <div className="bg-gray-700/30 rounded-xl p-6 border border-gray-600">
-                        <h3 className="text-lg font-semibold text-white mb-4">
-                           Divider Settings
-                        </h3>
-                        <div className="text-center py-8">
-                           <div className="w-16 h-16 bg-gray-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                              <FiMinus className="w-8 h-8 text-gray-400" />
-                           </div>
-                           <p className="text-gray-400 mb-2">
-                              Horizontal Divider
-                           </p>
-                           <p className="text-gray-500 text-sm">
-                              This element creates a visual separation between
-                              form sections
-                           </p>
-                        </div>
-                     </div>
-                  )}
-
-                  {/* Spacer Settings */}
-                  {normalizedField.type === "spacer" && (
-                     <div className="bg-gray-700/30 rounded-xl p-6 border border-gray-600">
-                        <h3 className="text-lg font-semibold text-white mb-4">
-                           Spacer Settings
-                        </h3>
-                        <div className="text-center py-8">
-                           <div className="w-16 h-16 bg-gray-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                              <FiBox className="w-8 h-8 text-gray-400" />
-                           </div>
-                           <p className="text-gray-400 mb-2">Spacer Element</p>
-                           <p className="text-gray-500 text-sm">
-                              This element takes up space in the grid but
-                              doesn't render any content
-                           </p>
-                           <div className="mt-4 text-xs text-blue-400">
-                              Current width:{" "}
-                              {WIDTH_OPTIONS.find(
-                                 (w) => w.value === normalizedField.width
-                              )?.fraction || "100%"}
-                           </div>
-                        </div>
-                     </div>
+                        )}
+                     </>
                   )}
                </div>
             </div>
@@ -492,12 +350,7 @@ const FieldEditor = ({
                            text-white rounded-lg transition-colors"
                >
                   <FiTrash2 className="w-4 h-4" />
-                  Delete{" "}
-                  {normalizedField.type === "hr"
-                     ? "Divider"
-                     : normalizedField.type === "spacer"
-                     ? "Spacer"
-                     : "Field"}
+                  Delete Field
                </button>
                <div className="flex items-center gap-3">
                   <button
