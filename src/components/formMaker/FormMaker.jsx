@@ -7,6 +7,7 @@ import DragPreview from "./DragPreview";
 import FieldEditor from "./FieldEditor";
 import FieldPalette from "./FieldPalette";
 import FormCanvas from "./FormCanvas";
+import FormPreview from "./FormPreview";
 
 /**
  * Modern FormMaker - Redesigned with left-right layout
@@ -311,56 +312,56 @@ const FormMaker = ({ isOpen, onClose }) => {
    );
 };
 
-// Form Preview Component
-const FormPreview = ({ fields, formData, onFormDataChange, onBack }) => {
-   const handleInputChange = (fieldName, value) => {
-      onFormDataChange(fieldName, value);
-   };
+// // Form Preview Component
+// const FormPreview = ({ fields, formData, onFormDataChange, onBack }) => {
+//    const handleInputChange = (fieldName, value) => {
+//       onFormDataChange(fieldName, value);
+//    };
 
-   return (
-      <div className="flex-1 flex flex-col">
-         <div className="p-4 border-b border-gray-700 flex items-center gap-4">
-            <button
-               onClick={onBack}
-               className="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white 
-                        rounded-lg transition-colors"
-            >
-               ← Back to Editor
-            </button>
-            <h3 className="text-lg font-semibold text-white">Form Preview</h3>
-         </div>
+//    return (
+//       <div className="flex-1 flex flex-col">
+//          <div className="p-4 border-b border-gray-700 flex items-center gap-4">
+//             <button
+//                onClick={onBack}
+//                className="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white 
+//                         rounded-lg transition-colors"
+//             >
+//                ← Back to Editor
+//             </button>
+//             <h3 className="text-lg font-semibold text-white">Form Preview</h3>
+//          </div>
 
-         <div className="flex-1 p-6 overflow-y-auto custom-scrollbar">
-            <div className="max-w-2xl mx-auto">
-               <form className="space-y-6">
-                  {fields.map((field) => (
-                     <FormField
-                        key={field.id}
-                        field={field}
-                        value={formData[field.name] || ""}
-                        onChange={(value) =>
-                           handleInputChange(field.name, value)
-                        }
-                     />
-                  ))}
+//          <div className="flex-1 p-6 overflow-y-auto custom-scrollbar">
+//             <div className="max-w-2xl mx-auto">
+//                <form className="space-y-6">
+//                   {fields.map((field) => (
+//                      <FormField
+//                         key={field.id}
+//                         field={field}
+//                         value={formData[field.name] || ""}
+//                         onChange={(value) =>
+//                            handleInputChange(field.name, value)
+//                         }
+//                      />
+//                   ))}
 
-                  {fields.length > 0 && (
-                     <div className="pt-4">
-                        <button
-                           type="button"
-                           className="w-full px-6 py-3 bg-blue-600 hover:bg-blue-700 
-                                    text-white font-medium rounded-lg transition-colors"
-                        >
-                           Submit Form
-                        </button>
-                     </div>
-                  )}
-               </form>
-            </div>
-         </div>
-      </div>
-   );
-};
+//                   {fields.length > 0 && (
+//                      <div className="pt-4">
+//                         <button
+//                            type="button"
+//                            className="w-full px-6 py-3 bg-blue-600 hover:bg-blue-700 
+//                                     text-white font-medium rounded-lg transition-colors"
+//                         >
+//                            Submit Form
+//                         </button>
+//                      </div>
+//                   )}
+//                </form>
+//             </div>
+//          </div>
+//       </div>
+//    );
+// };
 
 // Schema Preview Component
 const SchemaPreview = ({ fields, onBack }) => {

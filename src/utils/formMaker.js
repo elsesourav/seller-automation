@@ -5,8 +5,8 @@
 
 // Available field types
 export const FIELD_TYPES = [
-   { value: "text", label: "Text Input", icon: "FiType" },
    { value: "title", label: "Title Header", icon: "FiAlignCenter" },
+   { value: "text", label: "Text Input", icon: "FiType" },
    { value: "number", label: "Number Input", icon: "FiHash" },
    { value: "date", label: "Date Input", icon: "FiCalendar" },
    { value: "select", label: "Select Dropdown", icon: "FiChevronDown" },

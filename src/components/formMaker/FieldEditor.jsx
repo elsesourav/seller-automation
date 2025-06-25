@@ -12,7 +12,7 @@ import {
    FiX,
 } from "react-icons/fi";
 import { normalizeField } from "../../utils/formMaker";
-import { NumberInput, TextInput, TitleInput } from "../inputs";
+import { NumberInput, TextInput, TitleBar } from "../inputs";
 
 const FieldEditor = ({
    field,
@@ -55,6 +55,9 @@ const FieldEditor = ({
    };
 
    const handleSave = () => {
+      if (onUpdate) {
+         onUpdate(editField.id, editField); // Push all changes to parent only on save
+      }
       if (onSave) {
          onSave();
       } else {
@@ -69,11 +72,7 @@ const FieldEditor = ({
 
    // Generic handler for field property changes
    const handleFieldChange = (updates) => {
-      setEditField((prev) => {
-         const updated = { ...prev, ...updates };
-         onUpdate(updated.id, updates); // Update parent immediately
-         return updated;
-      });
+      setEditField((prev) => ({ ...prev, ...updates }));
    };
 
    // Local handlers for options
@@ -149,16 +148,18 @@ const FieldEditor = ({
                            Title Settings
                         </h3>
                         <div className="space-y-4">
-                           <TitleInput
+                           {/* Editable TitleBar value */}
+                           <TextInput
                               label="Title Text"
                               value={normalizedField.label}
                               onChange={(value) =>
                                  handleFieldChange({ label: value })
                               }
                               placeholder="Enter title text"
-                              helperText="This is how your title will appear in the form"
                               width="w-full"
                            />
+                           {/* Live preview */}
+                           <TitleBar value={normalizedField.label || "Title"} />
                         </div>
                      </div>
                   )}

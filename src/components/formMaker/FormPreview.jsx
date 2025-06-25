@@ -5,23 +5,9 @@ import {
    NumberInput,
    SelectInput,
    TextInput,
-   TitleInput,
+   TitleBar,
+   SpaceBar,
 } from "../inputs";
-
-// DUMMY TEST: Render a sample TextInput above the form to verify style
-const DummyInputTest = () => (
-  <div className="mb-6">
-    <TextInput
-      label="Dummy Test Input"
-      value="Test Value"
-      onChange={() => {}}
-      placeholder="Should look styled like your custom input"
-      required
-      width="w-full"
-      helperText="If this looks styled, your input component is working."
-    />
-  </div>
-);
 
 const FormPreview = ({ fields, formData, onFormDataChange, onBack }) => {
    // Group fields into rows using the same logic as FormCanvas
@@ -59,17 +45,10 @@ const FormPreview = ({ fields, formData, onFormDataChange, onBack }) => {
          disabled: field.disabled,
       };
       switch (field.type) {
-         case "spacer":
-            return (
-               <div className="h-10 border-2 border-dashed border-gray-500 bg-gray-800/30 rounded-lg" />
-            );
          case "title":
             return (
-               <TitleInput
-                  label={field.label}
+               <TitleBar
                   value={field.label}
-                  onChange={() => {}}
-                  disabled
                   width="w-full"
                />
             );
@@ -83,6 +62,8 @@ const FormPreview = ({ fields, formData, onFormDataChange, onBack }) => {
             return <SelectInput {...commonProps} />;
          case "multiple":
             return <MultipleInput {...commonProps} fieldType="select" />;
+         case "spacer":
+            return <SpaceBar {...commonProps} />;
          default:
             return null;
       }
@@ -101,12 +82,9 @@ const FormPreview = ({ fields, formData, onFormDataChange, onBack }) => {
          </div>
          <div className="flex-1 p-6 overflow-y-auto custom-scrollbar">
             <div className="max-w-4xl mx-auto space-y-6">
-              {/* DUMMY TEST INPUT - REMOVE AFTER TESTING */}
-              <DummyInputTest />
-              {/* END DUMMY TEST */}
-               <form className="space-y-6">
+               <form className="flex flex-col">
                   {rows.map((row, rowIdx) => (
-                     <div key={rowIdx} className="grid grid-cols-4 gap-4">
+                     <div key={rowIdx} className="grid grid-cols-4 h-26 gap-4">
                         {row.map((field) => (
                            <div
                               key={field.id}
