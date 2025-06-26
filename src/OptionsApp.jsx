@@ -10,7 +10,7 @@ import {
 } from "./components/options";
 
 function OptionsApp() {
-   const [activeTab, setActiveTab] = useState("account");
+   const [activeTab, setActiveTab] = useState("setup");
 
    const renderContent = () => {
       switch (activeTab) {
