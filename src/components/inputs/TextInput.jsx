@@ -11,13 +11,19 @@ const TextInput = ({
    helperText = "",
    className = "",
    width = "w-full",
+   onFocus,
 }) => {
    const [focused, setFocused] = useState(false);
+
+   const handleFocus = (e) => {
+      setFocused(true);
+      if (onFocus) onFocus(e);
+   };
 
    return (
       <div className={`relative ${width} ${className}`}>
          {label && (
-            <label className="block text-sm font-medium text-gray-300 mb-2">
+            <label className="block text-sm font-medium text-gray-300 mb-1">
                {label}
                {required && <span className="text-red-400 ml-1">*</span>}
             </label>
@@ -28,7 +34,7 @@ const TextInput = ({
                type="text"
                value={value || ""}
                onChange={(e) => onChange(e.target.value)}
-               onFocus={() => setFocused(true)}
+               onFocus={handleFocus}
                onBlur={() => setFocused(false)}
                placeholder={placeholder}
                disabled={disabled}
@@ -51,7 +57,7 @@ const TextInput = ({
          </div>
 
          {error && (
-            <p className="mt-2 text-sm text-red-400 flex items-center">
+            <p className="mt-1 text-sm text-red-400 flex items-center">
                <svg
                   className="w-4 h-4 mr-1"
                   fill="currentColor"
@@ -68,7 +74,7 @@ const TextInput = ({
          )}
 
          {helperText && !error && (
-            <p className="mt-2 text-sm text-gray-400">{helperText}</p>
+            <p className="mt-1 text-sm text-gray-400">{helperText}</p>
          )}
       </div>
    );

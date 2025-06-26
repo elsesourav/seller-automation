@@ -4,6 +4,7 @@ import {
    ListingIcon,
    MappingIcon,
    SetupIcon,
+   UserIcon,
    UpdateIcon,
 } from "./icons/EcommerceIcons";
 
@@ -17,6 +18,7 @@ function Navbar({ activeTab, setActiveTab }) {
       { id: "listing", label: "Create Listing", icon: ListingIcon },
       { id: "update", label: "Update Products", icon: UpdateIcon },
       { id: "setup", label: "Setup & Config", icon: SetupIcon },
+      { id: "account", label: "User Profile", icon: UserIcon },
    ];
 
    const hideTooltip = () => {

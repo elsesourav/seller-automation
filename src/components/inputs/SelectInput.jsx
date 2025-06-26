@@ -34,7 +34,7 @@ const SelectInput = ({
    return (
       <div className={`relative ${width} ${className}`}>
          {label && (
-            <label className="block text-sm font-medium text-gray-300 mb-2">
+            <label className="block text-sm font-medium text-gray-300 mb-1">
                {label}
                {required && <span className="text-red-400 ml-1">*</span>}
             </label>
@@ -88,7 +88,7 @@ const SelectInput = ({
 
             {/* Dropdown Options */}
             {isOpen && !disabled && (
-               <div className="absolute z-50 w-full mt-2 bg-gray-800 border border-gray-600 rounded-xl shadow-2xl max-h-60 overflow-y-auto">
+               <div className="absolute z-50 w-full mt-1 bg-gray-800 border border-gray-600 rounded-xl shadow-2xl max-h-60 overflow-y-auto">
                   {options.length > 0 ? (
                      options.map((option, index) => (
                         <button
@@ -118,7 +118,7 @@ const SelectInput = ({
          </div>
 
          {error && (
-            <p className="mt-2 text-sm text-red-400 flex items-center">
+            <p className="mt-1 text-sm text-red-400 flex items-center">
                <svg
                   className="w-4 h-4 mr-1"
                   fill="currentColor"
@@ -135,7 +135,7 @@ const SelectInput = ({
          )}
 
          {helperText && !error && (
-            <p className="mt-2 text-sm text-gray-400">{helperText}</p>
+            <p className="mt-1 text-sm text-gray-400">{helperText}</p>
          )}
 
          {/* Backdrop to close dropdown */}

@@ -1,29 +1,33 @@
 import { useState } from "react";
 import Navbar from "./components/Navbar";
-import HomeContent from "./components/options/HomeContent";
-import MappingContent from "./components/options/MappingContent";
-import ListingContent from "./components/options/ListingContent";
-import UpdateContent from "./components/options/UpdateContent";
-import SetupContent from "./components/options/SetupContent";
-
+import {
+   AccountOption,
+   HomeOption,
+   ListingOption,
+   MappingOption,
+   SetupOption,
+   UpdateOption,
+} from "./components/options";
 
 function OptionsApp() {
-   const [activeTab, setActiveTab] = useState("setup");
+   const [activeTab, setActiveTab] = useState("account");
 
    const renderContent = () => {
       switch (activeTab) {
          case "home":
-            return <HomeContent />;
+            return <HomeOption />;
          case "mapping":
-            return <MappingContent />;
+            return <MappingOption />;
          case "listing":
-            return <ListingContent />;
+            return <ListingOption />;
          case "update":
-            return <UpdateContent />;
+            return <UpdateOption />;
          case "setup":
-            return <SetupContent />;
+            return <SetupOption />;
+         case "account":
+            return <AccountOption />;
          default:
-            return <HomeContent />;
+            return <HomeOption />;
       }
    };
 

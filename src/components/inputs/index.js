@@ -6,6 +6,7 @@ export { default as NumberInput } from "./NumberInput";
 export { default as NumberSelectInput } from "./NumberSelectInput";
 export { default as OverlayCustomInput } from "./OverlayCustomInput";
 export { default as SelectInput } from "./SelectInput";
+export { default as SpaceBar } from "./SpaceBar";
+export { default as TextArea } from "./TextArea";
 export { default as TextInput } from "./TextInput";
 export { default as TitleBar } from "./TitleBar";
-export { default as SpaceBar } from "./SpaceBar";

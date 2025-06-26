@@ -246,7 +246,7 @@ const OverlayCustomInput = ({
 
          return (
             <div key={field.name} className="mb-4">
-               <label className="block text-sm font-medium text-gray-300 mb-2">
+               <label className="block text-sm font-medium text-gray-300 mb-1">
                   {field.label}
                   {field.required && (
                      <span className="text-red-400 ml-1">*</span>
@@ -342,7 +342,7 @@ const OverlayCustomInput = ({
                </button>
 
                {errors[field.name] && (
-                  <p className="mt-2 text-sm text-red-400 flex items-center">
+                  <p className="mt-1 text-sm text-red-400 flex items-center">
                      <svg
                         className="w-4 h-4 mr-1"
                         fill="currentColor"
@@ -359,7 +359,7 @@ const OverlayCustomInput = ({
                )}
 
                {field.helperText && !errors[field.name] && (
-                  <p className="mt-2 text-sm text-gray-400">
+                  <p className="mt-1 text-sm text-gray-400">
                      {field.helperText}
                   </p>
                )}

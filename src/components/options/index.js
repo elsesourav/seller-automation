@@ -1,6 +1,6 @@
-export { default as FormMaker } from "./FormMaker";
-export { default as HomeContent } from "./HomeContent";
-export { default as ListingContent } from "./ListingContent";
-export { default as MappingContent } from "./MappingContent";
-export { default as SetupContent } from "./SetupContent";
-export { default as UpdateContent } from "./UpdateContent";
+export { default as AccountOption } from "./AccountOption";
+export { default as HomeOption } from "./HomeOption";
+export { default as ListingOption } from "./ListingOption";
+export { default as MappingOption } from "./MappingOption";
+export { default as SetupOption } from "./SetupOption";
+export { default as UpdateOption } from "./UpdateOption";

@@ -122,3 +122,23 @@ export const SetupIcon = ({ className }) => (
       />
    </svg>
 );
+
+// User Icon - Simple user/avatar silhouette
+export const UserIcon = ({ className }) => (
+   <svg className={className} fill="currentColor" viewBox="0 0 24 24">
+      <circle
+         cx="12"
+         cy="8"
+         r="4"
+         stroke="currentColor"
+         strokeWidth="2"
+         fill="none"
+      />
+      <path
+         d="M4 20c0-3.3137 3.134-6 8-6s8 2.6863 8 6"
+         stroke="currentColor"
+         strokeWidth="2"
+         fill="none"
+      />
+   </svg>
+);

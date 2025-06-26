@@ -14,6 +14,7 @@ const NumberInput = ({
    helperText = "",
    className = "",
    width = "w-full",
+   onFocus,
 }) => {
    const [focused, setFocused] = useState(false);
 
@@ -31,16 +32,8 @@ const NumberInput = ({
          return;
       }
 
-      const numValue = Number(newValue);
-
-      // Check if it's a valid number
-      if (!isNaN(numValue)) {
-         // Apply min/max constraints
-         if (min !== undefined && numValue < min) return;
-         if (max !== undefined && numValue > max) return;
-
-         onChange(numValue);
-      }
+      // Always update the input value for controlled input
+      onChange(newValue);
    };
 
    const increment = () => {
@@ -57,10 +50,36 @@ const NumberInput = ({
       }
    };
 
+   // When blurring, convert to number if valid, else reset
+   const handleBlur = () => {
+      setFocused(false);
+      if (value === "" || value === undefined) return;
+      const numValue = Number(value);
+      if (!isNaN(numValue)) {
+         // Apply min/max constraints
+         if (min !== undefined && numValue < min) {
+            onChange(min);
+            return;
+         }
+         if (max !== undefined && numValue > max) {
+            onChange(max);
+            return;
+         }
+         onChange(numValue);
+      } else {
+         onChange("");
+      }
+   };
+
+   const handleFocus = (e) => {
+      setFocused(true);
+      if (onFocus) onFocus(e);
+   };
+
    return (
       <div className={`relative ${width} ${className}`}>
          {label && (
-            <label className="block text-sm font-medium text-gray-300 mb-2">
+            <label className="block text-sm font-medium text-gray-300 mb-1">
                {label}
                {required && <span className="text-red-400 ml-1">*</span>}
             </label>
@@ -70,10 +89,10 @@ const NumberInput = ({
             <input
                type="text"
                inputMode="numeric"
-               value={value || ""}
+               value={value === undefined ? "" : value}
                onChange={handleChange}
-               onFocus={() => setFocused(true)}
-               onBlur={() => setFocused(false)}
+               onFocus={handleFocus}
+               onBlur={handleBlur}
                placeholder={placeholder}
                disabled={disabled}
                className={`w-full px-4 py-3 pr-12 bg-gray-800/50 border-2 rounded-xl text-white placeholder-gray-500 transition-all duration-300 focus:outline-none ${
@@ -135,7 +154,7 @@ const NumberInput = ({
          </div>
 
          {error && (
-            <p className="mt-2 text-sm text-red-400 flex items-center gap-1">
+            <p className="mt-1 text-sm text-red-400 flex items-center gap-1">
                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                   <path
                      fillRule="evenodd"
@@ -148,7 +167,7 @@ const NumberInput = ({
          )}
 
          {helperText && !error && (
-            <p className="mt-2 text-sm text-gray-400">{helperText}</p>
+            <p className="mt-1 text-sm text-gray-400">{helperText}</p>
          )}
       </div>
    );
