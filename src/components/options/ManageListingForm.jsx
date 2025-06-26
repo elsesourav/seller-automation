@@ -6,7 +6,11 @@ import {
    updateForm,
 } from "../../api/formsApi";
 import { getUserFromCookie } from "../../api/userApi";
-import { addListingFormID, getVerticals, removeListingFormID } from "../../api/verticalsApi";
+import {
+   addListingFormID,
+   getVerticals,
+   removeListingFormID,
+} from "../../api/verticalsApi";
 import ConfirmDialog from "../ConfirmDialog";
 import CustomAlert from "../CustomAlert";
 
@@ -135,7 +139,10 @@ export default function ManageListingForm({ open, onClose }) {
             userId: user.userId,
          });
          // Remove formId from vertical's listingFormIDs
-         await removeListingFormID({ vertical: selectedVertical, formId: deleteTarget.id });
+         await removeListingFormID({
+            vertical: selectedVertical,
+            formId: deleteTarget.id,
+         });
          setAlert({ type: "success", message: "Form deleted!" });
          fetchForms(selectedVertical);
       } catch (err) {

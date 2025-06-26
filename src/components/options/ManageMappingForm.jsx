@@ -6,7 +6,11 @@ import {
    updateForm,
 } from "../../api/formsApi";
 import { getUserFromCookie } from "../../api/userApi";
-import { addMappingFormID, getVerticals, removeMappingFormID } from "../../api/verticalsApi";
+import {
+   addMappingFormID,
+   getVerticals,
+   removeMappingFormID,
+} from "../../api/verticalsApi";
 import ConfirmDialog from "../ConfirmDialog";
 import CustomAlert from "../CustomAlert";
 
@@ -135,7 +139,10 @@ export default function ManageMappingForm({ open, onClose }) {
             userId: user.userId,
          });
          // Remove formId from vertical's mappingFormIDs
-         await removeMappingFormID({ vertical: selectedVertical, formId: deleteTarget.id });
+         await removeMappingFormID({
+            vertical: selectedVertical,
+            formId: deleteTarget.id,
+         });
          setAlert({ type: "success", message: "Form deleted!" });
          fetchForms(selectedVertical);
       } catch (err) {
