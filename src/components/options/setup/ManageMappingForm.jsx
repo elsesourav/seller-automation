@@ -4,17 +4,17 @@ import {
    deleteForm,
    getForms,
    updateForm,
-} from "../../api/formsApi";
-import { getUserFromCookie } from "../../api/userApi";
+} from "../../../api/formsApi";
+import { getUserFromCookie } from "../../../api/userApi";
 import {
-   addListingFormID,
+   addMappingFormID,
    getVerticals,
-   removeListingFormID,
-} from "../../api/verticalsApi";
-import ConfirmDialog from "../ConfirmDialog";
-import CustomAlert from "../CustomAlert";
+   removeMappingFormID,
+} from "../../../api/verticalsApi";
+import ConfirmDialog from "../../ConfirmDialog";
+import CustomAlert from "../../CustomAlert";
 
-export default function ManageListingForm({ open, onClose }) {
+export default function ManageMappingForm({ open, onClose }) {
    const [verticals, setVerticals] = useState([]);
    const [selectedVertical, setSelectedVertical] = useState("");
    const [forms, setForms] = useState([]);
@@ -58,7 +58,7 @@ export default function ManageListingForm({ open, onClose }) {
    async function fetchForms(verticalId) {
       setLoading(true);
       try {
-         const data = await getForms({ vertical: verticalId, type: "listing" });
+         const data = await getForms({ vertical: verticalId, type: "mapping" });
          setForms(data);
       } catch (err) {
          setAlert({ type: "error", message: err.message });
@@ -75,7 +75,7 @@ export default function ManageListingForm({ open, onClose }) {
       setLoading(true);
       try {
          // Generate a unique formId (could use uuid or timestamp+user)
-         const formId = `${selectedVertical}_listing_${Date.now()}`;
+         const formId = `${selectedVertical}_mapping_${Date.now()}`;
          await createForm({
             formId,
             vertical: selectedVertical,
@@ -83,11 +83,11 @@ export default function ManageListingForm({ open, onClose }) {
             username: user.username,
             name: formData.name,
             status: formData.status,
-            type: "listing",
+            type: "mapping",
             form: {}, // You can add more form data fields as needed
          });
-         // Add formId to vertical's listingFormIDs
-         await addListingFormID({ vertical: selectedVertical, formId });
+         // Add formId to vertical's mappingFormIDs
+         await addMappingFormID({ vertical: selectedVertical, formId });
          setAlert({ type: "success", message: "Form created!" });
          setFormData({ name: "", status: "public" });
          fetchForms(selectedVertical);
@@ -138,8 +138,8 @@ export default function ManageListingForm({ open, onClose }) {
             formId: deleteTarget.id,
             userId: user.userId,
          });
-         // Remove formId from vertical's listingFormIDs
-         await removeListingFormID({
+         // Remove formId from vertical's mappingFormIDs
+         await removeMappingFormID({
             vertical: selectedVertical,
             formId: deleteTarget.id,
          });
@@ -165,7 +165,7 @@ export default function ManageListingForm({ open, onClose }) {
                ×
             </button>
             <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-4">
-               Manage Listing Forms
+               Manage Mapping Forms
             </h2>
             {alert && (
                <CustomAlert

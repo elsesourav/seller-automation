@@ -11,9 +11,9 @@ import {
    removeMappingFormID,
 } from "../../api/verticalsApi";
 import CustomAlert from "../CustomAlert";
-import ManageListingForm from "./ManageListingForm";
-import ManageMappingForm from "./ManageMappingForm";
-import ManageVertical from "./ManageVertical";
+import ManageListingForm from "./setup/ManageListingForm";
+import ManageMappingForm from "./setup/ManageMappingForm";
+import ManageVertical from "./setup/ManageVertical";
 
 export default function SetupContent() {
    const [verticals, setVerticals] = useState([]);
@@ -366,9 +366,9 @@ export default function SetupContent() {
                            Mapping Form IDs:
                         </div>
                         <div className="flex flex-wrap gap-2">
-                           {vertical.mappingFormsIDs &&
-                           vertical.mappingFormsIDs.length > 0 ? (
-                              vertical.mappingFormsIDs.map((fid) => (
+                           {vertical.mappingFormIDs &&
+                           vertical.mappingFormIDs.length > 0 ? (
+                              vertical.mappingFormIDs.map((fid) => (
                                  <span
                                     key={fid}
                                     className="bg-purple-900/60 text-purple-200 px-2 py-1 rounded text-xs flex items-center gap-1"

@@ -1,28 +1,32 @@
 import { useEffect, useState } from "react";
 import {
-   createForm,
-   deleteForm,
-   getForms,
-   updateForm,
-} from "../../api/formsApi";
-import { getUserFromCookie } from "../../api/userApi";
+   createProductInfo,
+   deleteProductInfo,
+   getProductInfos,
+   updateProductInfo,
+} from "../../../api/productsInfoApi";
+import { getUserFromCookie } from "../../../api/userApi";
 import {
-   addMappingFormID,
+   addMappingInfoID,
    getVerticals,
-   removeMappingFormID,
-} from "../../api/verticalsApi";
-import ConfirmDialog from "../ConfirmDialog";
-import CustomAlert from "../CustomAlert";
+   removeMappingInfoID,
+} from "../../../api/verticalsApi";
+import ConfirmDialog from "../../ConfirmDialog";
+import CustomAlert from "../../CustomAlert";
 
-export default function ManageMappingForm({ open, onClose }) {
+export default function ManageMappingInfo({ open, onClose }) {
    const [verticals, setVerticals] = useState([]);
    const [selectedVertical, setSelectedVertical] = useState("");
-   const [forms, setForms] = useState([]);
+   const [infos, setInfos] = useState([]);
    const [user, setUser] = useState(null);
    const [alert, setAlert] = useState(null);
    const [loading, setLoading] = useState(false);
    const [editing, setEditing] = useState(null);
-   const [formData, setFormData] = useState({ name: "", status: "public" });
+   const [infoData, setInfoData] = useState({
+      name: "",
+      status: "public",
+      info: "",
+   });
    const [showConfirm, setShowConfirm] = useState(false);
    const [deleteTarget, setDeleteTarget] = useState(null);
 
@@ -35,9 +39,9 @@ export default function ManageMappingForm({ open, onClose }) {
 
    useEffect(() => {
       if (selectedVertical) {
-         fetchForms(selectedVertical);
+         fetchInfos(selectedVertical);
       } else {
-         setForms([]);
+         setInfos([]);
       }
    }, [selectedVertical]);
 
@@ -55,11 +59,11 @@ export default function ManageMappingForm({ open, onClose }) {
       }
    }
 
-   async function fetchForms(verticalId) {
+   async function fetchInfos(verticalId) {
       setLoading(true);
       try {
-         const data = await getForms({ vertical: verticalId, type: "mapping" });
-         setForms(data);
+         const data = await getProductInfos({ type: "mapping" });
+         setInfos(data.filter((info) => info.vertical === verticalId));
       } catch (err) {
          setAlert({ type: "error", message: err.message });
       } finally {
@@ -74,23 +78,21 @@ export default function ManageMappingForm({ open, onClose }) {
          return setAlert({ type: "error", message: "Select a vertical" });
       setLoading(true);
       try {
-         // Generate a unique formId (could use uuid or timestamp+user)
-         const formId = `${selectedVertical}_mapping_${Date.now()}`;
-         await createForm({
-            formId,
+         const infoId = `${selectedVertical}_mappinginfo_${Date.now()}`;
+         await createProductInfo({
+            infoId,
             vertical: selectedVertical,
             userId: user.userId,
             username: user.username,
-            name: formData.name,
-            status: formData.status,
+            name: infoData.name,
+            status: infoData.status,
             type: "mapping",
-            form: {}, // You can add more form data fields as needed
+            info: infoData.info,
          });
-         // Add formId to vertical's mappingFormIDs
-         await addMappingFormID({ vertical: selectedVertical, formId });
-         setAlert({ type: "success", message: "Form created!" });
-         setFormData({ name: "", status: "public" });
-         fetchForms(selectedVertical);
+         await addMappingInfoID({ vertical: selectedVertical, infoId });
+         setAlert({ type: "success", message: "Info created!" });
+         setInfoData({ name: "", status: "public", info: "" });
+         fetchInfos(selectedVertical);
       } catch (err) {
          setAlert({ type: "error", message: err.message });
       } finally {
@@ -98,9 +100,9 @@ export default function ManageMappingForm({ open, onClose }) {
       }
    }
 
-   function handleEdit(form) {
-      setEditing(form.id);
-      setFormData({ name: form.name, status: form.status });
+   function handleEdit(info) {
+      setEditing(info.id);
+      setInfoData({ name: info.name, status: info.status, info: info.info });
    }
 
    async function handleUpdate(e) {
@@ -108,15 +110,15 @@ export default function ManageMappingForm({ open, onClose }) {
       if (!user) return setAlert({ type: "error", message: "Login required" });
       setLoading(true);
       try {
-         await updateForm({
-            formId: editing,
+         await updateProductInfo({
+            infoId: editing,
             userId: user.userId,
-            updates: { ...formData },
+            updates: { ...infoData },
          });
-         setAlert({ type: "success", message: "Form updated!" });
+         setAlert({ type: "success", message: "Info updated!" });
          setEditing(null);
-         setFormData({ name: "", status: "public" });
-         fetchForms(selectedVertical);
+         setInfoData({ name: "", status: "public", info: "" });
+         fetchInfos(selectedVertical);
       } catch (err) {
          setAlert({ type: "error", message: err.message });
       } finally {
@@ -124,8 +126,8 @@ export default function ManageMappingForm({ open, onClose }) {
       }
    }
 
-   function handleDelete(form) {
-      setDeleteTarget(form);
+   function handleDelete(info) {
+      setDeleteTarget(info);
       setShowConfirm(true);
    }
 
@@ -134,17 +136,16 @@ export default function ManageMappingForm({ open, onClose }) {
       setLoading(true);
       setShowConfirm(false);
       try {
-         await deleteForm({
-            formId: deleteTarget.id,
+         await deleteProductInfo({
+            infoId: deleteTarget.id,
             userId: user.userId,
          });
-         // Remove formId from vertical's mappingFormIDs
-         await removeMappingFormID({
+         await removeMappingInfoID({
             vertical: selectedVertical,
-            formId: deleteTarget.id,
+            infoId: deleteTarget.id,
          });
-         setAlert({ type: "success", message: "Form deleted!" });
-         fetchForms(selectedVertical);
+         setAlert({ type: "success", message: "Info deleted!" });
+         fetchInfos(selectedVertical);
       } catch (err) {
          setAlert({ type: "error", message: err.message });
       } finally {
@@ -165,7 +166,7 @@ export default function ManageMappingForm({ open, onClose }) {
                ×
             </button>
             <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-4">
-               Manage Mapping Forms
+               Manage Mapping Infos
             </h2>
             {alert && (
                <CustomAlert
@@ -195,19 +196,30 @@ export default function ManageMappingForm({ open, onClose }) {
                <input
                   type="text"
                   name="name"
-                  placeholder="Form Name"
-                  value={formData.name}
+                  placeholder="Info Name"
+                  value={infoData.name}
                   onChange={(e) =>
-                     setFormData({ ...formData, name: e.target.value })
+                     setInfoData({ ...infoData, name: e.target.value })
+                  }
+                  className="px-4 py-2 rounded bg-gray-900 text-white border border-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 flex-1"
+                  required
+               />
+               <input
+                  type="text"
+                  name="info"
+                  placeholder="Info String"
+                  value={infoData.info}
+                  onChange={(e) =>
+                     setInfoData({ ...infoData, info: e.target.value })
                   }
                   className="px-4 py-2 rounded bg-gray-900 text-white border border-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 flex-1"
                   required
                />
                <select
                   name="status"
-                  value={formData.status}
+                  value={infoData.status}
                   onChange={(e) =>
-                     setFormData({ ...formData, status: e.target.value })
+                     setInfoData({ ...infoData, status: e.target.value })
                   }
                   className="px-4 py-2 rounded bg-gray-900 text-white border border-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
                >
@@ -226,7 +238,7 @@ export default function ManageMappingForm({ open, onClose }) {
                      type="button"
                      onClick={() => {
                         setEditing(null);
-                        setFormData({ name: "", status: "public" });
+                        setInfoData({ name: "", status: "public", info: "" });
                      }}
                      className="px-4 py-2 bg-gray-700 text-gray-200 rounded-lg hover:bg-gray-600 transition-all duration-200 font-medium cursor-pointer"
                   >
@@ -236,43 +248,46 @@ export default function ManageMappingForm({ open, onClose }) {
             </form>
             <div className="space-y-6 max-h-[40vh] overflow-y-auto">
                {loading && <div className="text-gray-400">Loading...</div>}
-               {forms.length === 0 && !loading && (
-                  <div className="text-gray-400">No forms found.</div>
+               {infos.length === 0 && !loading && (
+                  <div className="text-gray-400">No infos found.</div>
                )}
-               {forms.map((form) => (
+               {infos.map((info) => (
                   <div
-                     key={form.id}
+                     key={info.id}
                      className="bg-gray-800/80 rounded-xl p-4 border border-gray-700 flex flex-col gap-2"
                   >
                      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
                         <div>
                            <span className="text-lg font-semibold text-white mr-2">
-                              {form.name}
+                              {info.name}
                            </span>
                            <span className="text-xs px-2 py-1 rounded bg-gray-700 text-gray-300 ml-2">
-                              {form.status}
+                              {info.status}
                            </span>
                            <span className="text-xs px-2 py-1 rounded bg-gray-700 text-gray-300 ml-2">
-                              by {form.username}
+                              by {info.username}
+                           </span>
+                           <span className="text-xs px-2 py-1 rounded bg-gray-700 text-gray-300 ml-2">
+                              {info.info}
                            </span>
                         </div>
-                        {user && user.userId === form.userId ? (
+                        {user && user.userId === info.userId ? (
                            <div className="flex gap-2 items-center">
                               <button
-                                 onClick={() => handleEdit(form)}
+                                 onClick={() => handleEdit(info)}
                                  className="px-3 py-1 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg hover:from-blue-600 hover:to-purple-700 transition-all duration-200 font-medium text-xs cursor-pointer"
                               >
                                  Edit
                               </button>
                               <button
-                                 onClick={() => handleDelete(form)}
+                                 onClick={() => handleDelete(info)}
                                  className="px-3 py-1 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-all duration-200 font-medium text-xs cursor-pointer"
                               >
                                  Delete
                               </button>
                            </div>
                         ) : (
-                           form.status === "public" && (
+                           info.status === "public" && (
                               <div className="text-xs text-green-400 font-medium">
                                  Public
                               </div>
@@ -284,8 +299,8 @@ export default function ManageMappingForm({ open, onClose }) {
             </div>
             <ConfirmDialog
                open={showConfirm}
-               title="Delete Form"
-               message={`Are you sure you want to delete form "${deleteTarget?.name}"? This action cannot be undone.`}
+               title="Delete Info"
+               message={`Are you sure you want to delete info "${deleteTarget?.name}"? This action cannot be undone.`}
                onConfirm={confirmDelete}
                onCancel={() => {
                   setShowConfirm(false);

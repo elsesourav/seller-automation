@@ -18,14 +18,13 @@ export async function createForm({
    userId,
    name,
    status = "public",
-   type,
    form,
 }) {
    const ref = doc(db, "forms", formId);
    const snap = await getDoc(ref);
    if (snap.exists()) throw new Error("Form with this ID already exists");
-   await setDoc(ref, { username, userId, name, status, type, form });
-   return { formId, username, userId, name, status, type, form };
+   await setDoc(ref, { username, userId, name, status, form });
+   return { formId, username, userId, name, status, form };
 }
 
 // Update a form (only by owner)
@@ -87,13 +86,14 @@ export async function getForms({ userId, type }) {
 export async function getFormByName({ name, userId }) {
    const formsRef = collection(db, "forms");
    // First, try to get public form by name
-   let q = query(
-      formsRef,
-      where("name", "==", name),
-      where("status", "==", "public")
-   );
+   let q = query(formsRef, where("status", "==", "public"));
    let snaps = await getDocs(q);
-   let result = snaps.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+   let result = snaps.docs
+      .map((doc) => ({ id: doc.id, ...doc.data() }))
+      .filter(
+         (doc) =>
+            doc.name && doc.name.toLowerCase().includes(name.toLowerCase())
+      );
    // If userId is provided, also get private form by name for this user
    if (userId) {
       let privateQ = query(

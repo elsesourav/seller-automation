@@ -25,20 +25,23 @@ export async function createOrUpdateVertical({
    if (snap.exists()) {
       throw new Error("Vertical with this name already exists");
    }
-   const createdAt = Date.now();
    await setDoc(
       ref,
       {
-         createdAt,
          userId,
          username,
          status,
-         listingFormIDs: [],
-         mappingFormsIDs: [],
+         products: [],
+         basicInfo: [],
+         infoForm: [],
+         // listingFormIDs: [],
+         // mappingFormIDs: [],
+         // listingInfoIDs: [],
+         // mappingInfoIDs: [],
       },
       { merge: true }
    );
-   return { vertical, createdAt, userId, username, status };
+   return { vertical, userId, username, status };
 }
 
 // Edit vertical (only by owner)
@@ -73,14 +76,34 @@ export async function removeListingFormID({ vertical, formId }) {
    await updateDoc(ref, { listingFormIDs: arrayRemove(formId) });
 }
 
-// Add/remove mappingFormsIDs
+// Add/remove mappingFormIDs
 export async function addMappingFormID({ vertical, formId }) {
    const ref = doc(db, "verticals", vertical);
-   await updateDoc(ref, { mappingFormsIDs: arrayUnion(formId) });
+   await updateDoc(ref, { mappingFormIDs: arrayUnion(formId) });
 }
 export async function removeMappingFormID({ vertical, formId }) {
    const ref = doc(db, "verticals", vertical);
-   await updateDoc(ref, { mappingFormsIDs: arrayRemove(formId) });
+   await updateDoc(ref, { mappingFormIDs: arrayRemove(formId) });
+}
+
+// Add/remove listingInfoIDs
+export async function addListingInfoID({ vertical, infoId }) {
+   const ref = doc(db, "verticals", vertical);
+   await updateDoc(ref, { listingInfoIDs: arrayUnion(infoId) });
+}
+export async function removeListingInfoID({ vertical, infoId }) {
+   const ref = doc(db, "verticals", vertical);
+   await updateDoc(ref, { listingInfoIDs: arrayRemove(infoId) });
+}
+
+// Add/remove mappingInfoIDs
+export async function addMappingInfoID({ vertical, infoId }) {
+   const ref = doc(db, "verticals", vertical);
+   await updateDoc(ref, { mappingInfoIDs: arrayUnion(infoId) });
+}
+export async function removeMappingInfoID({ vertical, infoId }) {
+   const ref = doc(db, "verticals", vertical);
+   await updateDoc(ref, { mappingInfoIDs: arrayRemove(infoId) });
 }
 
 // Get all public verticals or private ones for a user

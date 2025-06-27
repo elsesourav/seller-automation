@@ -1,13 +1,13 @@
 import { useEffect, useState } from "react";
-import { getUserFromCookie } from "../../api/userApi";
+import { getUserFromCookie } from "../../../api/userApi";
 import {
    createOrUpdateVertical,
    deleteVertical,
    editVertical,
    getVerticals,
-} from "../../api/verticalsApi";
-import ConfirmDialog from "../ConfirmDialog";
-import CustomAlert from "../CustomAlert";
+} from "../../../api/verticalsApi";
+import ConfirmDialog from "../../ConfirmDialog";
+import CustomAlert from "../../CustomAlert";
 
 export default function ManageVertical({ open, onClose }) {
    const [verticals, setVerticals] = useState([]);
