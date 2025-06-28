@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { createUser, getUserFromCookie, loginUser } from "../../api/userApi";
+import { signup, signin, signout } from "../../api/usersApi";
+import Cookies from "js-cookie";
 import CustomAlert from "../CustomAlert";
 
 export default function AccountContent() {
@@ -18,8 +19,8 @@ export default function AccountContent() {
 
    // On mount, check cookie for user
    useEffect(() => {
-      const cookieUser = getUserFromCookie();
-      if (cookieUser) setUser(cookieUser);
+      const cookieUser = Cookies.get("user");
+      if (cookieUser) setUser(JSON.parse(cookieUser));
    }, []);
 
    const handleChange = (e) => {
@@ -31,11 +32,12 @@ export default function AccountContent() {
       setLoading(true);
       setAlert(null);
       try {
-         const userInfo = await loginUser({
+         const { data, error } = await signin({
             username: form.username,
             password: form.password,
          });
-         setUser(userInfo);
+         if (error) throw new Error(error);
+         setUser(data);
          setAlert({ type: "success", message: "Login successful!" });
       } catch (err) {
          setAlert({ type: "error", message: err.message });
@@ -53,12 +55,13 @@ export default function AccountContent() {
       setLoading(true);
       setAlert(null);
       try {
-         const userInfo = await createUser({
+         const { data, error } = await signup({
             name: form.name,
             username: form.username,
             password: form.password,
          });
-         setUser(userInfo);
+         if (error) throw new Error(error);
+         setUser(data);
          setAlert({
             type: "success",
             message: "Account created! You are now logged in.",
@@ -71,12 +74,10 @@ export default function AccountContent() {
    };
 
    const handleLogout = () => {
+      signout();
       setUser(null);
       setForm({ username: "", password: "", name: "", confirmPassword: "" });
       setAlert({ type: "info", message: "Logged out." });
-      // Remove cookie
-      document.cookie =
-         "sa_user=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
    };
 
    return (

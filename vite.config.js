@@ -1,11 +1,17 @@
 import react from "@vitejs/plugin-react";
 import { fileURLToPath, URL } from "node:url";
-import { resolve } from "path";
+import { resolve, dirname } from "path";
 import { defineConfig } from "vite";
+const __dirname = dirname(fileURLToPath(import.meta.url));
 
 // https://vitejs.dev/config/
 export default defineConfig({
    plugins: [react()],
+   resolve: {
+      alias: {
+         "@": resolve(__dirname, "./src"),
+      },
+   },
    build: {
       // Generate Chrome Extension compatible build
       rollupOptions: {
