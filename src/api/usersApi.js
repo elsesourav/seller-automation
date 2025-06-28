@@ -2,12 +2,11 @@ import bcrypt from "bcryptjs";
 import Cookies from "js-cookie";
 import { supabase } from "../lib/supabaseClient";
 
-
 // USERS TABLE API
 export async function createUser({ name, username, password }) {
    return supabase
       .from("users")
-      .insert([{ name, username, password }])
+      .insert([{ name, username: username.toLowerCase(), password }])
       .select()
       .single();
 }
@@ -19,6 +18,15 @@ export async function getUserByUsername(username) {
 }
 export async function listUsers() {
    return supabase.from("users").select("*");
+}
+
+// Fetch all users (id, username, etc)
+export async function fetchAllUsers() {
+   const { data, error } = await supabase
+      .from("users")
+      .select("id, username, name");
+   if (error) throw new Error(error.message);
+   return data;
 }
 
 // SIGNUP: hash password, create user, set cookie
@@ -48,7 +56,6 @@ export async function signin({ username, password }) {
    setUserCookie(user.id, user.name, user.username);
    return { data: user, error: null };
 }
-
 
 export function setUserCookie(id, name, username) {
    Cookies.set(

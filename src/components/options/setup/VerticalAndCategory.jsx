@@ -160,7 +160,12 @@ export default function VerticalAndCategory() {
                      <div className="flex justify-between items-center mb-2 bg-white/10 px-4 py-1 rounded-2xl">
                         <div className="flex items-center gap-2">
                            <span className="font-semibold text-lg">
-                              {v.label && <span className="text-gray-400">({v.label})</span>} {v.name}
+                              {v.name}{" "}
+                              {v.label && (
+                                 <span className="text-gray-400">
+                                    ({v.label})
+                                 </span>
+                              )}
                            </span>
                            <span
                               className={`ml-3 px-2 py-1 rounded text-xs font-medium ${

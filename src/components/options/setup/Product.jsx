@@ -7,8 +7,9 @@ import {
    getAllProducts,
    updateProduct,
 } from "../../../api/productsApi";
-import { getUserId } from "../../../api/usersApi";
+import { fetchAllUsers, getUserId } from "../../../api/usersApi";
 import { getAllVerticals } from "../../../api/verticalsApi";
+import { formatIndianNumber } from "../../../lib/utils";
 import ConfirmDialog from "../../ConfirmDialog";
 import CustomAlert from "../../CustomAlert";
 import { NumberInput, SelectInput, TextInput } from "../../inputs";
@@ -17,6 +18,7 @@ export default function Product() {
    const [products, setProducts] = useState([]);
    const [verticals, setVerticals] = useState([]);
    const [categories, setCategories] = useState([]);
+   const [users, setUsers] = useState([]);
    const [loading, setLoading] = useState(true);
    const [showModal, setShowModal] = useState(false);
    const [editProduct, setEditProduct] = useState(null);
@@ -42,24 +44,24 @@ export default function Product() {
    useEffect(() => {
       async function fetchData() {
          setLoading(true);
-         const [p, v, c] = await Promise.all([
+         const [p, v, c, u] = await Promise.all([
             getAllProducts(),
             getAllVerticals(),
             getAllCategories(),
+            fetchAllUsers(),
          ]);
          setProducts(p);
          setVerticals(v);
          setCategories(c);
+         setUsers(u);
          setLoading(false);
       }
       fetchData();
    }, []);
 
-   // ProductForm component for both Add and Edit
    function ProductForm({
       initialForm,
       verticals,
-      filteredCategories,
       onSubmit,
       onCancel,
       submitLabel,
@@ -68,7 +70,6 @@ export default function Product() {
    }) {
       const [form, setForm] = useState(initialForm);
 
-      // Auto-calculate increment_per_rupee when price or quantity_per_kg changes (real-time, useEffect)
       useEffect(() => {
          const price = parseFloat(form.price);
          const qty = parseFloat(form.quantity_per_kg);
@@ -81,7 +82,6 @@ export default function Product() {
          // eslint-disable-next-line
       }, [form.price, form.quantity_per_kg]);
 
-      // If initialForm changes (edit/add), reset local form state
       useEffect(() => {
          setForm(initialForm);
       }, [initialForm]);
@@ -90,6 +90,9 @@ export default function Product() {
          e && e.preventDefault();
          onSubmit(form);
       };
+
+      // Use categories filtered by the selected vertical in the form
+      const formCategories = getFormCategories(form.vertical_id);
 
       return (
          <form onSubmit={handleSubmit}>
@@ -126,7 +129,7 @@ export default function Product() {
             <SelectInput
                value={form.category_id}
                onChange={(val) => setForm((f) => ({ ...f, category_id: val }))}
-               options={filteredCategories.map((c) => ({
+               options={formCategories.map((c) => ({
                   value: c.id,
                   label: c.name,
                }))}
@@ -250,10 +253,24 @@ export default function Product() {
       }
    };
 
-   // Filter categories by selected vertical
+   // Filter categories by selected vertical (for the main filter bar)
    const filteredCategories = filterVertical
       ? categories.filter((c) => c.vertical_id === filterVertical)
       : categories;
+
+   // Helper: filter categories for the form, based on form.vertical_id
+   function getFormCategories(verticalId) {
+      return verticalId
+         ? categories.filter((c) => c.vertical_id === verticalId)
+         : categories;
+   }
+
+   // Helper: get username by user id
+   function getUsername(userId) {
+      // You may want to cache this in a real app
+      const user = users.find((u) => u.id === userId);
+      return user?.username || userId?.slice(0, 8) || "-";
+   }
 
    // Filter products based on search and filters
    const filteredProducts = products.filter((p) => {
@@ -287,7 +304,7 @@ export default function Product() {
                <FiBox className="text-green-400" /> Products
             </h2>
             <button
-               className="px-4 py-2 bg-gradient-to-r from-green-500 to-blue-600 text-white rounded-lg hover:from-green-600 hover:to-blue-700 font-medium shadow flex items-center gap-2"
+               className="px-4 py-2 bg-gradient-to-r from-green-500 to-blue-600 text-white rounded-lg hover:from-green-600 hover:to-blue-700 font-medium shadow flex items-center gap-2 cursor-pointer"
                onClick={() => {
                   setShowModal(true);
                   setEditProduct(null);
@@ -352,16 +369,14 @@ export default function Product() {
                <div className="flex-1">
                   <div className="relative w-full bg-gray-800/70 rounded-2xl overflow-hidden border border-gray-700 shadow-lg">
                      <div className="flex gap-2 bg-gradient-to-r from-gray-900/80 to-gray-800/80 text-gray-200 px-4 py-2 font-semibold text-sm rounded-t-2xl">
-                        <p className="flex-1 text-left">Name</p>
-                        <p className="flex-1 text-left">Label</p>
-                        <p className="w-24 text-left">Status</p>
-                        <p className="flex-1 text-left">Vertical</p>
-                        <p className="flex-1 text-left">Category</p>
-                        <p className="w-20 text-right">Price</p>
-                        <p className="w-24 text-right">Qty/Kg</p>
-                        <p className="w-24 text-right">SKU</p>
-                        <p className="w-24 text-right">Inc/Rupee</p>
-                        <p className="w-28 text-center">Actions</p>
+                        <p className="flex-5 text-left">Name</p>
+                        <p className="flex-2 text-left">Category</p>
+                        <p className="w-20 text-left">Price</p>
+                        <p className="w-28 text-left">Qty/Kg</p>
+                        <p className="w-16 text-left">SKU</p>
+                        <p className="w-20 text-left">Inc/Rupee</p>
+                        <p className="w-24 text-left">Owner</p>
+                        <p className="w-16 text-center">Actions</p>
                      </div>
                      <div>
                         {filteredProducts.length === 0 ? (
@@ -372,71 +387,70 @@ export default function Product() {
                            filteredProducts.map((p) => (
                               <div
                                  key={p.id}
-                                 className="flex items-center border-t border-gray-700 hover:bg-gray-700/40 transition-colors duration-150 group px-4 py-2"
+                                 className="flex items-center gap-2 border-t border-gray-700 hover:bg-gray-700/40 transition-colors duration-150 group px-4 py-2"
                               >
-                                 <p className="flex-1 whitespace-nowrap text-white group-hover:text-green-200">
-                                    {p.name}
-                                 </p>
-                                 <p className="flex-1 whitespace-nowrap text-gray-200 group-hover:text-green-100">
-                                    {p.label}
-                                 </p>
-                                 <p className="w-24">
-                                    <span
-                                       className={`px-2 py-1 rounded text-xs font-medium ${
-                                          p.status === "private"
-                                             ? "bg-pink-700/40 text-pink-300"
-                                             : "bg-blue-700/40 text-blue-300"
-                                       }`}
-                                    >
-                                       {p.status === "private"
-                                          ? "Private"
-                                          : "Public"}
+                                 <div className="flex-5 whitespace-nowrap text-white group-hover:text-green-200 flex items-center gap-1">
+                                    {p.name}{" "}
+                                    {p.label && (
+                                       <span className="text-gray-400">
+                                          ({p.label})
+                                       </span>
+                                    )}
+                                    <span className="w-4 h-full grid place-items-center">
+                                       <span
+                                          className={`p-2 rounded-full ${
+                                             p.status === "private"
+                                                ? "bg-pink-700/40 text-pink-300"
+                                                : "bg-blue-700/40 text-blue-300"
+                                          }`}
+                                       />
                                     </span>
-                                 </p>
-                                 <p className="flex-1 whitespace-nowrap text-gray-200">
-                                    {verticals.find(
-                                       (v) => v.id === p.vertical_id
-                                    )?.name || "-"}
-                                 </p>
-                                 <p className="flex-1 whitespace-nowrap text-gray-200">
+                                 </div>
+                                 <div className="flex-2 whitespace-nowrap text-gray-200">
                                     {categories.find(
                                        (c) => c.id === p.category_id
                                     )?.name || "-"}
-                                 </p>
-                                 <p className="w-20 text-right text-gray-200">
-                                    {p.price}
-                                 </p>
-                                 <p className="w-24 text-right text-gray-200">
-                                    {p.quantity_per_kg}
-                                 </p>
-                                 <p className="w-24 text-right text-gray-200">
+                                 </div>
+                                 <div className="w-20 text-left text-gray-200">
+                                    {formatIndianNumber(p.price)}
+                                 </div>
+                                 <div className="w-28 text-left text-gray-200">
+                                    {formatIndianNumber(p.quantity_per_kg)}
+                                 </div>
+                                 <div className="w-16 text-left text-gray-200">
                                     {p.sku_id}
-                                 </p>
-                                 <p className="w-24 text-right text-gray-200">
-                                    {p.increment_per_rupee}
-                                 </p>
-                                 <div className="w-28 flex gap-2 justify-center">
-                                    <button
-                                       className="text-blue-400 hover:text-blue-200 flex items-center gap-1 cursor-pointer"
-                                       onClick={() => {
-                                          setEditProduct(p);
-                                          setForm({
-                                             name: p.name,
-                                             label: p.label,
-                                             status: p.status,
-                                             vertical_id: p.vertical_id,
-                                             category_id: p.category_id,
-                                             price: p.price,
-                                             quantity_per_kg: p.quantity_per_kg,
-                                             sku_id: p.sku_id,
-                                             increment_per_rupee:
-                                                p.increment_per_rupee,
-                                          });
-                                          setShowEditSection(true);
-                                       }}
-                                    >
-                                       <FiEdit2 />
-                                    </button>
+                                 </div>
+                                 <div className="w-20 text-left text-gray-200">
+                                    {formatIndianNumber(p.increment_per_rupee)}
+                                 </div>
+                                 <div className="w-24 text-left text-gray-200">
+                                    {getUsername(p.created_by)}
+                                 </div>
+                                 <div className="w-16 flex gap-2 justify-center">
+                                    {p.created_by === getUserId() && (
+                                       <button
+                                          className="text-blue-400 hover:text-blue-200 flex items-center gap-1 cursor-pointer"
+                                          onClick={() => {
+                                             setEditProduct(p);
+                                             setForm({
+                                                name: p.name,
+                                                label: p.label,
+                                                status: p.status,
+                                                vertical_id: p.vertical_id,
+                                                category_id: p.category_id,
+                                                price: p.price,
+                                                quantity_per_kg:
+                                                   p.quantity_per_kg,
+                                                sku_id: p.sku_id,
+                                                increment_per_rupee:
+                                                   p.increment_per_rupee,
+                                             });
+                                             setShowEditSection(true);
+                                          }}
+                                       >
+                                          <FiEdit2 />
+                                       </button>
+                                    )}
                                  </div>
                               </div>
                            ))
@@ -458,7 +472,6 @@ export default function Product() {
                   <ProductForm
                      initialForm={form}
                      verticals={verticals}
-                     filteredCategories={filteredCategories}
                      onSubmit={async (formData) => {
                         await handleEdit(formData);
                         setShowEditSection(false);
@@ -488,7 +501,6 @@ export default function Product() {
                   <ProductForm
                      initialForm={form}
                      verticals={verticals}
-                     filteredCategories={filteredCategories}
                      onSubmit={async (formData) => {
                         await handleAdd(formData);
                         setShowModal(false);
