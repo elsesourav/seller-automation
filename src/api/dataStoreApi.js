@@ -1,31 +1,37 @@
 import { supabase } from "../lib/supabaseClient";
 
-// DATA_STORE TABLE API
+// Create a new data store entry
 export async function createDataStore({ data }) {
-   return supabase.from("data_store").insert([{ data }]).select().single();
-}
-export async function getDataStoreById(id) {
-   // No status/created_by, so just return
-   const { data, error } = await supabase
+   const { data: created, error } = await supabase
       .from("data_store")
-      .select("*")
-      .eq("id", id)
+      .insert([{ data }])
+      .select()
       .single();
    if (error) throw new Error(error.message);
-   return data;
+   return created;
 }
+
+// Update a data store entry
 export async function updateDataStore(id, updates) {
-   return supabase
+   const { data, error } = await supabase
       .from("data_store")
       .update(updates)
       .eq("id", id)
       .select()
       .single();
+   if (error) throw new Error(error.message);
+   return data;
 }
+
+// Delete a data store entry
 export async function deleteDataStore(id) {
-   return supabase.from("data_store").delete().eq("id", id);
+   const { error } = await supabase.from("data_store").delete().eq("id", id);
+   if (error) throw new Error(error.message);
+   return { success: true };
 }
-export async function listDataStores() {
+
+// Get all data store entries
+export async function getAllDataStores() {
    const { data, error } = await supabase.from("data_store").select("*");
    if (error) throw new Error(error.message);
    return data;

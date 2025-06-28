@@ -1,15 +1,17 @@
 import { supabase } from "../lib/supabaseClient";
+import { getUserId } from "./usersApi";
 
-// BASE_FORM_DATA TABLE API
+// Create a new base form data
 export async function createBaseFormData({
    data_id,
    status = "private",
    base_form_id,
    vertical_id,
    category_id,
-   created_by,
 }) {
-   return supabase
+   const created_by = getUserId();
+   if (!created_by) throw new Error("Not authenticated");
+   const { data, error } = await supabase
       .from("base_form_data")
       .insert([
          {
@@ -23,20 +25,14 @@ export async function createBaseFormData({
       ])
       .select()
       .single();
-}
-export async function getBaseFormDataById(id) {
-   // Allow access if status is public
-   const { data, error } = await supabase
-      .from("base_form_data")
-      .select("*")
-      .eq("id", id)
-      .single();
    if (error) throw new Error(error.message);
-   if (data.status === "public") return data;
-   throw new Error("Not authorized");
+   return data;
 }
-export async function updateBaseFormData(id, updates, userId) {
-   // Only allow update if created_by is userId
+
+// Update a base form data (only by owner)
+export async function updateBaseFormData(id, updates) {
+   const userId = getUserId();
+   if (!userId) throw new Error("Not authenticated");
    const { data, error } = await supabase
       .from("base_form_data")
       .select("*")
@@ -44,15 +40,20 @@ export async function updateBaseFormData(id, updates, userId) {
       .single();
    if (error) throw new Error(error.message);
    if (data.created_by !== userId) throw new Error("Not authorized");
-   return supabase
+   const { data: updated, error: updateError } = await supabase
       .from("base_form_data")
       .update(updates)
       .eq("id", id)
       .select()
       .single();
+   if (updateError) throw new Error(updateError.message);
+   return updated;
 }
-export async function deleteBaseFormData(id, userId) {
-   // Only allow delete if created_by is userId
+
+// Delete a base form data (only by owner)
+export async function deleteBaseFormData(id) {
+   const userId = getUserId();
+   if (!userId) throw new Error("Not authenticated");
    const { data, error } = await supabase
       .from("base_form_data")
       .select("*")
@@ -60,17 +61,28 @@ export async function deleteBaseFormData(id, userId) {
       .single();
    if (error) throw new Error(error.message);
    if (data.created_by !== userId) throw new Error("Not authorized");
-   return supabase.from("base_form_data").delete().eq("id", id);
+   const { error: deleteError } = await supabase
+      .from("base_form_data")
+      .delete()
+      .eq("id", id);
+   if (deleteError) throw new Error(deleteError.message);
+   return { success: true };
 }
-export async function listBaseFormData() {
-   // Return all public base form data
-   const { data, error } = await supabase
+
+// Get all base form data (public + private for current user)
+export async function getAllBaseFormData() {
+   const userId = getUserId();
+   const { data: publicData, error } = await supabase
       .from("base_form_data")
       .select("*")
       .eq("status", "public");
    if (error) throw new Error(error.message);
-   return data;
-}
-export async function getBaseFormDataByUser(userId) {
-   return supabase.from("base_form_data").select("*").eq("created_by", userId);
+   if (!userId) return publicData;
+   const { data: privateData, error: privateError } = await supabase
+      .from("base_form_data")
+      .select("*")
+      .eq("status", "private")
+      .eq("created_by", userId);
+   if (privateError) throw new Error(privateError.message);
+   return publicData.concat(privateData);
 }

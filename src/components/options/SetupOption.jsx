@@ -1,25 +1,25 @@
-import BaseFormDataAdmin from "../supabaseAdmin/BaseFormDataAdmin";
-import BaseFormsAdmin from "../supabaseAdmin/BaseFormsAdmin";
-import CategoriesAdmin from "../supabaseAdmin/CategoriesAdmin";
-import DataStoreAdmin from "../supabaseAdmin/DataStoreAdmin";
-import DescriptionFormDataAdmin from "../supabaseAdmin/DescriptionFormDataAdmin";
-import DescriptionFormsAdmin from "../supabaseAdmin/DescriptionFormsAdmin";
-import FormsAdmin from "../supabaseAdmin/FormsAdmin";
-import ProductsAdmin from "../supabaseAdmin/ProductsAdmin";
-import VerticalsAdmin from "../supabaseAdmin/VerticalsAdmin";
+import { useState } from "react";
+import {
+   BasicInfo,
+   DescForm,
+   Description,
+   InfoForm,
+   Product,
+   SetupHeader,
+   VerticalAndCategory,
+} from "./setup";
 
 export default function SetupContent() {
+   const [activeTab, setActiveTab] = useState("product");
    return (
       <div style={{ display: "flex", flexDirection: "column", gap: "2rem" }}>
-         <VerticalsAdmin />
-         <CategoriesAdmin />
-         <ProductsAdmin />
-         <FormsAdmin />
-         <BaseFormsAdmin />
-         <DescriptionFormsAdmin />
-         <DataStoreAdmin />
-         <BaseFormDataAdmin />
-         <DescriptionFormDataAdmin />
+         <SetupHeader activeTab={activeTab} setActiveTab={setActiveTab} />
+         {activeTab === "product" && <Product />}
+         {activeTab === "basicinfo" && <BasicInfo />}
+         {activeTab === "description" && <Description />}
+         {activeTab === "infoform" && <InfoForm />}
+         {activeTab === "descform" && <DescForm />}
+         {activeTab === "verticalandcategory" && <VerticalAndCategory />}
       </div>
    );
 }

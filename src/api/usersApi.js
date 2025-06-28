@@ -2,6 +2,7 @@ import bcrypt from "bcryptjs";
 import Cookies from "js-cookie";
 import { supabase } from "../lib/supabaseClient";
 
+
 // USERS TABLE API
 export async function createUser({ name, username, password }) {
    return supabase
@@ -29,15 +30,7 @@ export async function signup({ name, username, password }) {
       .select()
       .single();
    if (data && !error) {
-      Cookies.set(
-         "user",
-         JSON.stringify({
-            id: data.id,
-            name: data.name,
-            username: data.username,
-         }),
-         { expires: 7 }
-      );
+      setUserCookie(data.id, data.name, data.username);
    }
    return { data, error };
 }
@@ -52,15 +45,53 @@ export async function signin({ username, password }) {
    if (!isMatch) {
       return { data: null, error: "Invalid password" };
    }
-   Cookies.set(
-      "user",
-      JSON.stringify({ id: user.id, name: user.name, username: user.username }),
-      { expires: 7 }
-   );
+   setUserCookie(user.id, user.name, user.username);
    return { data: user, error: null };
 }
 
-// SIGNOUT: remove user cookie
-export function signout() {
+
+export function setUserCookie(id, name, username) {
+   Cookies.set(
+      "user",
+      JSON.stringify({
+         id,
+         name,
+         username,
+      }),
+      { expires: 90 }
+   );
+}
+
+export function getUserCookie() {
+   const cookie = Cookies.get("user");
+   if (cookie) {
+      try {
+         return JSON.parse(cookie);
+      } catch (error) {
+         console.error("Error parsing user cookie:", error);
+         return null;
+      }
+   }
+   return null;
+}
+
+export function getUserId() {
+   const cookie = Cookies.get("user");
+   if (cookie) {
+      try {
+         return JSON.parse(cookie)?.id || null;
+      } catch (error) {
+         console.error("Error parsing user cookie:", error);
+         return null;
+      }
+   }
+   return null;
+}
+
+export function removeUserCookie() {
    Cookies.remove("user");
+}
+
+export function signout() {
+   removeUserCookie();
 }

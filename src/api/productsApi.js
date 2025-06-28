@@ -1,19 +1,21 @@
 import { supabase } from "../lib/supabaseClient";
+import { getUserId } from "./usersApi";
 
-// PRODUCTS TABLE API
+// Create a new product
 export async function createProduct({
    name,
    label,
    status = "public",
    vertical_id,
    category_id,
-   created_by,
    price,
    quantity_per_kg,
    sku_id,
    increment_per_rupee,
 }) {
-   return supabase
+   const created_by = getUserId();
+   if (!created_by) throw new Error("Not authenticated");
+   const { data, error } = await supabase
       .from("products")
       .insert([
          {
@@ -31,20 +33,14 @@ export async function createProduct({
       ])
       .select()
       .single();
-}
-export async function getProductById(id) {
-   // Allow access if status is public
-   const { data, error } = await supabase
-      .from("products")
-      .select("*")
-      .eq("id", id)
-      .single();
    if (error) throw new Error(error.message);
-   if (data.status === "public") return data;
-   throw new Error("Not authorized");
+   return data;
 }
-export async function updateProduct(id, updates, userId) {
-   // Only allow update if created_by is userId
+
+// Update a product (only by owner)
+export async function updateProduct(id, updates) {
+   const userId = getUserId();
+   if (!userId) throw new Error("Not authenticated");
    const { data, error } = await supabase
       .from("products")
       .select("*")
@@ -52,15 +48,20 @@ export async function updateProduct(id, updates, userId) {
       .single();
    if (error) throw new Error(error.message);
    if (data.created_by !== userId) throw new Error("Not authorized");
-   return supabase
+   const { data: updated, error: updateError } = await supabase
       .from("products")
       .update(updates)
       .eq("id", id)
       .select()
       .single();
+   if (updateError) throw new Error(updateError.message);
+   return updated;
 }
-export async function deleteProduct(id, userId) {
-   // Only allow delete if created_by is userId
+
+// Delete a product (only by owner)
+export async function deleteProduct(id) {
+   const userId = getUserId();
+   if (!userId) throw new Error("Not authenticated");
    const { data, error } = await supabase
       .from("products")
       .select("*")
@@ -68,17 +69,28 @@ export async function deleteProduct(id, userId) {
       .single();
    if (error) throw new Error(error.message);
    if (data.created_by !== userId) throw new Error("Not authorized");
-   return supabase.from("products").delete().eq("id", id);
+   const { error: deleteError } = await supabase
+      .from("products")
+      .delete()
+      .eq("id", id);
+   if (deleteError) throw new Error(deleteError.message);
+   return { success: true };
 }
-export async function listProducts() {
-   // Return all public products
-   const { data, error } = await supabase
+
+// Get all products (public + private for current user)
+export async function getAllProducts() {
+   const userId = getUserId();
+   const { data: publicData, error } = await supabase
       .from("products")
       .select("*")
       .eq("status", "public");
    if (error) throw new Error(error.message);
-   return data;
-}
-export async function getProductsByUser(userId) {
-   return supabase.from("products").select("*").eq("created_by", userId);
+   if (!userId) return publicData;
+   const { data: privateData, error: privateError } = await supabase
+      .from("products")
+      .select("*")
+      .eq("status", "private")
+      .eq("created_by", userId);
+   if (privateError) throw new Error(privateError.message);
+   return publicData.concat(privateData);
 }
