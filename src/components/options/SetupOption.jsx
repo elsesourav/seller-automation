@@ -1,19 +1,21 @@
 import { useEffect, useState } from "react";
 import { getUserFromCookie } from "../../api/userApi";
 import {
-   addListingFormID,
-   addMappingFormID,
+   // addListingFormID,
+   // addMappingFormID,
    createOrUpdateVertical,
    deleteVertical,
    editVertical,
    getVerticals,
-   removeListingFormID,
-   removeMappingFormID,
+   addBasicInfo,
+   removeBasicInfo,
+   // removeListingFormID,
+   // removeMappingFormID,
 } from "../../api/verticalsApi";
 import CustomAlert from "../CustomAlert";
-import ManageListingForm from "./setup/ManageListingForm";
-import ManageMappingForm from "./setup/ManageMappingForm";
-import ManageVertical from "./setup/ManageVertical";
+// import ManageListingForm from "./setup/ManageListingForm";
+// import ManageMappingForm from "./setup/ManageMappingForm";
+// import ManageVertical from "./setup/ManageVertical";
 
 export default function SetupContent() {
    const [verticals, setVerticals] = useState([]);
@@ -25,6 +27,18 @@ export default function SetupContent() {
    const [showManage, setShowManage] = useState(false);
    const [showListing, setShowListing] = useState(false);
    const [showMapping, setShowMapping] = useState(false);
+
+   // addBasicInfo({ vertical: "seed", infoId: "t1" })
+   //    .then(() => console.log("added"))
+   //    .catch((err) => console.error("Error:", err));
+
+   // addBasicInfo({ vertical: "seed", infoId: "t2" })
+   //    .then(() => console.log("added"))
+   //    .catch((err) => console.error("Error:", err));
+
+   // removeBasicInfo({ vertical: "seed", infoId: "t1" })
+   //    .then(() => console.log("Removed!"))
+   //    .catch((err) => console.error("Error:", err));
 
    useEffect(() => {
       setUser(getUserFromCookie());
@@ -110,34 +124,34 @@ export default function SetupContent() {
    }
 
    // Add/Remove Form IDs
-   async function handleAddFormId(vertical, type, formId) {
-      setLoading(true);
-      try {
-         if (type === "listing")
-            await addListingFormID({ vertical: vertical.id, formId });
-         else await addMappingFormID({ vertical: vertical.id, formId });
-         setAlert({ type: "success", message: `Form ID added to ${type}` });
-         fetchVerticals();
-      } catch (err) {
-         setAlert({ type: "error", message: err.message });
-      } finally {
-         setLoading(false);
-      }
-   }
-   async function handleRemoveFormId(vertical, type, formId) {
-      setLoading(true);
-      try {
-         if (type === "listing")
-            await removeListingFormID({ vertical: vertical.id, formId });
-         else await removeMappingFormID({ vertical: vertical.id, formId });
-         setAlert({ type: "success", message: `Form ID removed from ${type}` });
-         fetchVerticals();
-      } catch (err) {
-         setAlert({ type: "error", message: err.message });
-      } finally {
-         setLoading(false);
-      }
-   }
+   // async function handleAddFormId(vertical, type, formId) {
+   //    setLoading(true);
+   //    try {
+   //       if (type === "listing")
+   //          await addListingFormID({ vertical: vertical.id, formId });
+   //       else await addMappingFormID({ vertical: vertical.id, formId });
+   //       setAlert({ type: "success", message: `Form ID added to ${type}` });
+   //       fetchVerticals();
+   //    } catch (err) {
+   //       setAlert({ type: "error", message: err.message });
+   //    } finally {
+   //       setLoading(false);
+   //    }
+   // }
+   // async function handleRemoveFormId(vertical, type, formId) {
+   //    setLoading(true);
+   //    try {
+   //       if (type === "listing")
+   //          await removeListingFormID({ vertical: vertical.id, formId });
+   //       else await removeMappingFormID({ vertical: vertical.id, formId });
+   //       setAlert({ type: "success", message: `Form ID removed from ${type}` });
+   //       fetchVerticals();
+   //    } catch (err) {
+   //       setAlert({ type: "error", message: err.message });
+   //    } finally {
+   //       setLoading(false);
+   //    }
+   // }
 
    return (
       <div className="max-w-2xl mx-auto space-y-8 p-6">
@@ -191,7 +205,7 @@ export default function SetupContent() {
                Mapping Form
             </button>
          </div>
-         <ManageVertical
+         {/* <ManageVertical
             open={showManage}
             onClose={() => setShowManage(false)}
          />
@@ -202,7 +216,7 @@ export default function SetupContent() {
          <ManageMappingForm
             open={showMapping}
             onClose={() => setShowMapping(false)}
-         />
+         /> */}
          <h2 className="text-xl font-bold text-white mb-4">
             Verticals Management
          </h2>
@@ -297,7 +311,7 @@ export default function SetupContent() {
                   </div>
                   <div className="flex flex-col md:flex-row gap-4 mt-2">
                      {/* Listing Form IDs */}
-                     <div className="flex-1">
+                     {/* <div className="flex-1">
                         <div className="text-sm text-gray-300 mb-1">
                            Listing Form IDs:
                         </div>
@@ -359,9 +373,9 @@ export default function SetupContent() {
                               Add
                            </button>
                         </form>
-                     </div>
+                     </div> */}
                      {/* Mapping Form IDs */}
-                     <div className="flex-1">
+                     {/* <div className="flex-1">
                         <div className="text-sm text-gray-300 mb-1">
                            Mapping Form IDs:
                         </div>
@@ -423,7 +437,7 @@ export default function SetupContent() {
                               Add
                            </button>
                         </form>
-                     </div>
+                     </div> */}
                   </div>
                </div>
             ))}
