@@ -39,7 +39,7 @@ const NumberSelectInput = ({
                onFocus={() => setFocused(true)}
                onBlur={() => setFocused(false)}
                disabled={disabled}
-               className={`w-full px-4 py-3 pr-10 bg-gray-800/50 border-2 rounded-xl text-left transition-all duration-300 focus:outline-none ${
+               className={`w-full px-4 py-3 pr-10 bg-gray-800/50 border-2 rounded-xl text-left cursor-pointer transition-all duration-300 focus:outline-none ${
                   error
                      ? "border-red-500 focus:border-red-400"
                      : focused || isOpen
@@ -89,7 +89,7 @@ const NumberSelectInput = ({
                            key={option.value}
                            type="button"
                            onClick={() => handleSelect(option.value)}
-                           className={`w-full px-4 py-3 text-left hover:bg-gray-700/50 transition-colors duration-200 flex justify-between items-center ${
+                           className={`w-full px-4 py-3 text-left hover:bg-gray-700/50 transition-colors duration-200 flex justify-between cursor-pointer items-center ${
                               index === 0 ? "rounded-t-xl" : ""
                            } ${
                               index === options.length - 1 ? "rounded-b-xl" : ""

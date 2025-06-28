@@ -19,7 +19,7 @@ const tabs = [
 export default function SetupHeader({ activeTab, setActiveTab }) {
    return (
       <div className="w-full flex justify-center mb-8">
-         <div className="flex bg-gray-800/90 backdrop-blur-md rounded-2xl shadow-lg border border-gray-700/60 p-1 gap-2">
+         <div className="flex bg-gray-800/90 backdrop-blur-md rounded-2xl shadow-lg border border-gray-700/60 p-1 gap-4">
             {tabs.map((tab) => {
                const Icon = tab.icon;
                const isActive = activeTab === tab.id;

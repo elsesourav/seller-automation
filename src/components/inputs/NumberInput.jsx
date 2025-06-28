@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 const NumberInput = ({
    label,
@@ -15,25 +15,57 @@ const NumberInput = ({
    className = "",
    width = "w-full",
    onFocus,
+   useIndianFormat = false, // Add a prop to control Indian formatting
 }) => {
    const [focused, setFocused] = useState(false);
+   const inputRef = useRef();
+
+   // Format number with commas (Indian style, controlled by prop)
+   function formatNumberIndian(x) {
+      if (x === "" || x === undefined || x === null) return "";
+      const num = Number(x);
+      if (isNaN(num)) return x;
+      // Preserve decimals if present
+      const [intPart, decPart] = x.toString().split(".");
+      const formattedInt = useIndianFormat
+         ? new Intl.NumberFormat("en-IN").format(Number(intPart))
+         : new Intl.NumberFormat("en-US").format(Number(intPart));
+      return decPart !== undefined
+         ? `${formattedInt}.${decPart}`
+         : formattedInt;
+   }
+
+   // Remove all commas
+   function unformatNumber(x) {
+      return x.replace(/,/g, "");
+   }
 
    const handleChange = (e) => {
-      const newValue = e.target.value;
-
-      // Allow empty value
-      if (newValue === "") {
+      const el = e.target;
+      const rawValue = el.value;
+      const selectionStart = el.selectionStart;
+      const unformatted = unformatNumber(rawValue);
+      if (unformatted === "") {
          onChange("");
          return;
       }
-
       // Allow only numbers, minus sign, and decimal point
-      if (!/^-?\d*\.?\d*$/.test(newValue)) {
+      if (!/^-?\d*\.?\d*$/.test(unformatted)) {
          return;
       }
-
       // Always update the input value for controlled input
-      onChange(newValue);
+      onChange(unformatted);
+      setTimeout(() => {
+         if (inputRef.current) {
+            let pos = selectionStart;
+            // Count commas before caret in old and new
+            const leftRaw = rawValue.slice(0, selectionStart);
+            const leftUnformatted = unformatNumber(leftRaw);
+            const leftFormatted = formatNumberIndian(leftUnformatted);
+            pos = leftFormatted.length;
+            inputRef.current.setSelectionRange(pos, pos);
+         }
+      }, 0);
    };
 
    const increment = () => {
@@ -87,9 +119,12 @@ const NumberInput = ({
 
          <div className="relative">
             <input
+               ref={inputRef}
                type="text"
                inputMode="numeric"
-               value={value === undefined ? "" : value}
+               value={formatNumberIndian(
+                  value === undefined ? "" : value.toString()
+               )}
                onChange={handleChange}
                onFocus={handleFocus}
                onBlur={handleBlur}
@@ -114,7 +149,7 @@ const NumberInput = ({
                   type="button"
                   onClick={increment}
                   disabled={disabled || (max && value >= max)}
-                  className="p-1 text-gray-400 hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="p-1 text-gray-400 hover:text-white cursor-pointer transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                >
                   <svg
                      className="w-3 h-3"
@@ -132,7 +167,7 @@ const NumberInput = ({
                   type="button"
                   onClick={decrement}
                   disabled={disabled || (min && value <= min)}
-                  className="p-1 text-gray-400 hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="p-1 text-gray-400 hover:text-white transition-colors disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed"
                >
                   <svg
                      className="w-3 h-3"

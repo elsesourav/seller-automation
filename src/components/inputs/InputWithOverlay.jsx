@@ -105,7 +105,7 @@ const InputWithOverlay = ({
                onClick={handleOpenOverlay}
                onFocus={() => setFocused(true)}
                onBlur={() => setFocused(false)}
-               className={`w-full px-4 py-3 pr-10 bg-gray-800/50 border-2 rounded-xl text-left transition-all duration-300 focus:outline-none ${
+               className={`w-full px-4 py-3 pr-10 bg-gray-800/50 border-2 rounded-xl text-left transition-all cursor-pointer duration-300 focus:outline-none ${
                   error
                      ? "border-red-500 focus:border-red-400"
                      : focused

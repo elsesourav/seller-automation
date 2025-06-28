@@ -271,7 +271,7 @@ const OverlayCustomInput = ({
                                     onClick={() =>
                                        removeField(field.name, savedIndex)
                                     }
-                                    className="ml-1 text-blue-400 hover:text-red-400 transition-colors"
+                                    className="ml-1 text-blue-400 hover:text-red-400 transition-colors cursor-pointer"
                                  >
                                     <svg
                                        className="w-3 h-3"
@@ -304,7 +304,7 @@ const OverlayCustomInput = ({
                         <button
                            type="button"
                            onClick={() => removeField(field.name, index)}
-                           className="p-2 text-red-400 hover:text-red-300 transition-colors"
+                           className="p-2 text-red-400 hover:text-red-300 transition-colors cursor-pointer"
                         >
                            <svg
                               className="w-4 h-4"
@@ -325,7 +325,7 @@ const OverlayCustomInput = ({
                <button
                   type="button"
                   onClick={() => addNewField(field.name)}
-                  className="flex items-center gap-2 px-3 py-2 text-sm text-blue-400 hover:text-blue-300 transition-colors"
+                  className="flex items-center gap-2 px-3 py-2 text-sm text-blue-400 hover:text-blue-300 transition-colors cursor-pointer"
                >
                   <svg
                      className="w-4 h-4"
@@ -455,7 +455,7 @@ const OverlayCustomInput = ({
                <h3 className="text-xl font-semibold text-white">{title}</h3>
                <button
                   onClick={handleCancel}
-                  className="text-gray-400 hover:text-white transition-colors p-1"
+                  className="text-gray-400 hover:text-white transition-colors p-1 cursor-pointer"
                >
                   <svg
                      className="w-6 h-6"
@@ -478,13 +478,13 @@ const OverlayCustomInput = ({
             <div className="flex items-center justify-end gap-3 p-6 border-t border-gray-700">
                <button
                   onClick={handleCancel}
-                  className="px-4 py-2 text-gray-400 hover:text-white transition-colors"
+                  className="px-4 py-2 text-gray-400 hover:text-white cursor-pointer transition-colors"
                >
                   Cancel
                </button>
                <button
                   onClick={handleSave}
-                  className="px-6 py-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg hover:from-blue-600 hover:to-purple-700 transition-all duration-300 font-medium"
+                  className="px-6 py-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg hover:from-blue-600 hover:to-purple-700 transition-all duration-300 font-medium cursor-pointer"
                >
                   Save
                </button>

@@ -34,7 +34,7 @@ function OptionsApp() {
    return (
       <div className="min-h-screen bg-dark-dotted pl-22">
          <Navbar activeTab={activeTab} setActiveTab={setActiveTab} />
-         <main className="max-w-4xl mx-auto px-4 py-8">{renderContent()}</main>
+         <main className="max-w-5xl mx-auto px-4 py-8">{renderContent()}</main>
       </div>
    );
 }

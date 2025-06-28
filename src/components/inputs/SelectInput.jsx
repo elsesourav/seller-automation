@@ -47,7 +47,7 @@ const SelectInput = ({
                onFocus={() => setFocused(true)}
                onBlur={() => setFocused(false)}
                disabled={disabled}
-               className={`w-full px-4 py-3 pr-10 bg-gray-800/50 border-2 rounded-xl text-left transition-all duration-300 focus:outline-none ${
+               className={`w-full px-4 py-3 pr-10 bg-gray-800/50 border-2 rounded-xl text-left transition-all duration-300 focus:outline-none cursor-pointer ${
                   error
                      ? "border-red-500 focus:border-red-400"
                      : focused || isOpen
@@ -88,14 +88,14 @@ const SelectInput = ({
 
             {/* Dropdown Options */}
             {isOpen && !disabled && (
-               <div className="absolute z-50 w-full mt-1 bg-gray-800 border border-gray-600 rounded-xl shadow-2xl max-h-60 overflow-y-auto">
+               <div className="absolute z-50 w-full mt-1 bg-gray-800 border border-gray-600 rounded-xl shadow-2xl max-h-60 overflow-y-auto cursor-pointer">
                   {options.length > 0 ? (
                      options.map((option, index) => (
                         <button
                            key={option.value}
                            type="button"
                            onClick={() => handleSelect(option)}
-                           className={`w-full px-4 py-3 text-left hover:bg-gray-700/50 transition-colors duration-200 ${
+                           className={`w-full px-4 py-3 text-left hover:bg-gray-700/50 transition-colors duration-200 cursor-pointer ${
                               index === 0 ? "rounded-t-xl" : ""
                            } ${
                               index === options.length - 1 ? "rounded-b-xl" : ""

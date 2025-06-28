@@ -150,7 +150,7 @@ const MultipleInput = ({
                onClick={handleOpenModal}
                onFocus={() => setFocused(true)}
                onBlur={() => setFocused(false)}
-               className={`w-full px-4 py-3 pr-10 bg-gray-800/50 border-2 rounded-xl text-left transition-all duration-300 focus:outline-none ${
+               className={`w-full px-4 py-3 pr-10 bg-gray-800/50 border-2 rounded-xl text-left cursor-pointer transition-all duration-300 focus:outline-none ${
                   error
                      ? "border-red-500 focus:border-red-400"
                      : focused
@@ -219,7 +219,7 @@ const MultipleInput = ({
                      </h3>
                      <button
                         onClick={handleCancel}
-                        className="text-gray-400 hover:text-white transition-colors p-1"
+                        className="text-gray-400 hover:text-white cursor-pointer transition-colors p-1"
                      >
                         <svg
                            className="w-6 h-6"
@@ -251,7 +251,7 @@ const MultipleInput = ({
                                        <button
                                           type="button"
                                           onClick={() => removeValue(index)}
-                                          className="ml-1 text-blue-400 hover:text-red-400 transition-colors"
+                                          className="ml-1 text-blue-400 hover:text-red-400 transition-colors cursor-pointer"
                                        >
                                           <svg
                                              className="w-3 h-3"
@@ -284,7 +284,7 @@ const MultipleInput = ({
                               <button
                                  type="button"
                                  onClick={() => removeValue(index)}
-                                 className="p-2 text-red-400 hover:text-red-300 transition-colors"
+                                 className="p-2 text-red-400 hover:text-red-300 transition-colors cursor-pointer"
                               >
                                  <svg
                                     className="w-4 h-4"
@@ -305,7 +305,7 @@ const MultipleInput = ({
                      <button
                         type="button"
                         onClick={addNewValue}
-                        className="flex items-center gap-2 px-3 py-2 text-sm text-blue-400 hover:text-blue-300 transition-colors"
+                        className="flex items-center gap-2 px-3 py-2 text-sm text-blue-400 cursor-pointer hover:text-blue-300 transition-colors"
                      >
                         <svg
                            className="w-4 h-4"
@@ -332,13 +332,13 @@ const MultipleInput = ({
                   <div className="flex items-center justify-end gap-3 p-6 border-t border-gray-700">
                      <button
                         onClick={handleCancel}
-                        className="px-4 py-2 text-gray-400 hover:text-white transition-colors"
+                        className="px-4 py-2 text-gray-400 hover:text-white transition-colors cursor-pointer"
                      >
                         Cancel
                      </button>
                      <button
                         onClick={handleSave}
-                        className="px-6 py-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg hover:from-blue-600 hover:to-purple-700 transition-all duration-300 font-medium"
+                        className="px-6 py-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg hover:from-blue-600 hover:to-purple-700 cursor-pointer transition-all duration-300 font-medium"
                      >
                         Save
                      </button>
