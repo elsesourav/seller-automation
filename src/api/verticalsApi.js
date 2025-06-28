@@ -1,10 +1,18 @@
 import { supabase } from "../lib/supabaseClient";
 import { getUserId } from "./usersApi";
 
-// Create a new vertical
+// Create a new vertical (unique name)
 export async function createVertical({ name, label, status = "public" }) {
    const created_by = getUserId();
    if (!created_by) throw new Error("Not authenticated");
+   // Check for duplicate name
+   const { data: existing, error: checkError } = await supabase
+      .from("verticals")
+      .select("id")
+      .eq("name", name)
+      .maybeSingle();
+   if (checkError) throw new Error(checkError.message);
+   if (existing) throw new Error("A vertical with this name already exists.");
    const { data, error } = await supabase
       .from("verticals")
       .insert([{ name, label, status, created_by }])
@@ -23,7 +31,7 @@ export async function updateVertical(id, updates) {
       .select("*")
       .eq("id", id)
       .single();
-   
+
    if (error) throw new Error(error.message);
    if (data.created_by !== userId) throw new Error("Not authorized");
    const { data: updated, error: updateError } = await supabase

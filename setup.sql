@@ -22,7 +22,7 @@ DROP TABLE IF EXISTS verticals CASCADE;
 CREATE TABLE
    verticals (
       id UUID PRIMARY KEY DEFAULT gen_random_uuid (),
-      name TEXT NOT NULL,
+      name TEXT NOT NULL UNIQUE,
       label TEXT,
       status status_enum DEFAULT 'public',
       created_by UUID REFERENCES users (id) ON DELETE SET NULL,
@@ -36,31 +36,35 @@ DROP TABLE IF EXISTS categories CASCADE;
 CREATE TABLE
    categories (
       id UUID PRIMARY KEY DEFAULT gen_random_uuid (),
+      vertical_id UUID REFERENCES verticals (id) ON DELETE CASCADE, -- New field
       name TEXT NOT NULL,
       label TEXT,
       status status_enum DEFAULT 'public',
       created_by UUID REFERENCES users (id) ON DELETE SET NULL,
       created_at TIMESTAMP DEFAULT now (),
-      updated_at TIMESTAMP DEFAULT now ()
+      updated_at TIMESTAMP DEFAULT now (),
+      UNIQUE (vertical_id, name)
    );
 
 -- PRODUCTS (with pricing fields)
 DROP TABLE IF EXISTS products CASCADE;
-CREATE TABLE products (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  name TEXT NOT NULL,
-  label TEXT,
-  status status_enum,
-  vertical_id UUID REFERENCES verticals(id) ON DELETE CASCADE,
-  category_id UUID REFERENCES categories(id) ON DELETE CASCADE,
-  created_by UUID REFERENCES users(id),
-  price NUMERIC(10, 2),
-  quantity_per_kg NUMERIC(10, 2),
-  sku_id TEXT,
-  increment_per_rupee NUMERIC(10, 2),
-  created_at TIMESTAMP DEFAULT now(),
-  updated_at TIMESTAMP DEFAULT now()
-);
+
+CREATE TABLE
+   products (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid (),
+      name TEXT NOT NULL,
+      label TEXT,
+      status status_enum,
+      vertical_id UUID REFERENCES verticals (id) ON DELETE CASCADE,
+      category_id UUID REFERENCES categories (id) ON DELETE CASCADE,
+      created_by UUID REFERENCES users (id),
+      price NUMERIC(10, 2),
+      quantity_per_kg NUMERIC(10, 2),
+      sku_id TEXT,
+      increment_per_rupee NUMERIC(10, 2),
+      created_at TIMESTAMP DEFAULT now (),
+      updated_at TIMESTAMP DEFAULT now ()
+   );
 
 -- FORMS (for form structure in JSON)
 DROP TABLE IF EXISTS forms CASCADE;
