@@ -71,3 +71,15 @@ export async function getAllForms() {
    if (privateError) throw new Error(privateError.message);
    return publicData.concat(privateData);
 }
+
+// Get a single form by ID
+export async function getFormById(id) {
+   if (!id || typeof id !== "string") throw new Error("Invalid form id");
+   const { data, error } = await supabase
+      .from("forms")
+      .select("*")
+      .eq("id", id)
+      .single();
+   if (error) throw new Error(error.message);
+   return data;
+}
