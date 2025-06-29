@@ -2,7 +2,6 @@ import { useState } from "react";
 import DateInput from "./DateInput";
 import NumberInput from "./NumberInput";
 import NumberSelectInput from "./NumberSelectInput";
-import SelectInput from "./SelectInput";
 import TextInput from "./TextInput";
 
 /**
@@ -78,6 +77,139 @@ const MultipleInput = ({
       });
    };
 
+   // Custom FilterableSelectInput for select fields with typing/filtering
+   const FilterableSelectInput = ({
+      value,
+      onChange,
+      options,
+      placeholder,
+   }) => {
+      const [isOpen, setIsOpen] = useState(false);
+      const [searchQuery, setSearchQuery] = useState("");
+
+      const filteredOptions = options.filter((option) =>
+         option.label.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+
+      const selectedOption = options.find((opt) => opt.value === value);
+
+      const handleSelect = (option) => {
+         onChange(option.value);
+         setIsOpen(false);
+         setSearchQuery("");
+      };
+
+      const handleInputChange = (val) => {
+         setSearchQuery(val);
+         if (!isOpen) setIsOpen(true);
+      };
+
+      const handleInputFocus = () => {
+         setIsOpen(true);
+      };
+
+      const handleInputBlur = () => {
+         // Delay hiding to allow option selection
+         setTimeout(() => {
+            setIsOpen(false);
+            if (!selectedOption) {
+               setSearchQuery("");
+            }
+         }, 200);
+      };
+
+      const handleClearSelection = () => {
+         onChange("");
+         setSearchQuery("");
+         setIsOpen(false);
+      };
+
+      const displayValue =
+         searchQuery || (selectedOption ? selectedOption.label : "");
+
+      return (
+         <div className="relative">
+            <div className="relative">
+               <input
+                  type="text"
+                  value={displayValue}
+                  onChange={(e) => handleInputChange(e.target.value)}
+                  onFocus={handleInputFocus}
+                  onBlur={handleInputBlur}
+                  placeholder={placeholder}
+                  className="w-full px-4 py-3 pr-20 bg-gray-800/50 border-2 border-gray-600 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 transition-all duration-300"
+               />
+               <div className="absolute right-3 top-1/2 transform -translate-y-1/2 flex items-center gap-1">
+                  {selectedOption && (
+                     <button
+                        type="button"
+                        onClick={handleClearSelection}
+                        className="text-gray-400 hover:text-red-400 transition-colors"
+                     >
+                        <svg
+                           className="w-4 h-4"
+                           fill="currentColor"
+                           viewBox="0 0 20 20"
+                        >
+                           <path
+                              fillRule="evenodd"
+                              d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                              clipRule="evenodd"
+                           />
+                        </svg>
+                     </button>
+                  )}
+                  <svg
+                     className={`w-5 h-5 text-gray-400 transition-transform duration-200 ${
+                        isOpen ? "rotate-180" : ""
+                     }`}
+                     fill="currentColor"
+                     viewBox="0 0 20 20"
+                  >
+                     <path
+                        fillRule="evenodd"
+                        d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                        clipRule="evenodd"
+                     />
+                  </svg>
+               </div>
+            </div>
+
+            {/* Dropdown Options */}
+            {isOpen && (
+               <div className="absolute z-[60] w-full mt-1 bg-gray-800 border border-gray-600 rounded-xl shadow-2xl max-h-48 overflow-y-auto">
+                  {filteredOptions.length > 0 ? (
+                     filteredOptions.map((option, optIndex) => (
+                        <button
+                           key={option.value}
+                           type="button"
+                           onClick={() => handleSelect(option)}
+                           className={`w-full px-4 py-3 text-left hover:bg-gray-700/50 transition-colors duration-200 cursor-pointer ${
+                              optIndex === 0 ? "rounded-t-xl" : ""
+                           } ${
+                              optIndex === filteredOptions.length - 1
+                                 ? "rounded-b-xl"
+                                 : ""
+                           } ${
+                              value === option.value
+                                 ? "bg-blue-600/20 text-blue-300"
+                                 : "text-white"
+                           }`}
+                        >
+                           {option.label}
+                        </button>
+                     ))
+                  ) : (
+                     <div className="px-4 py-3 text-gray-400 text-center">
+                        No options found for "{searchQuery}"
+                     </div>
+                  )}
+               </div>
+            )}
+         </div>
+      );
+   };
+
    const getDisplayValue = (val) => {
       if (fieldType === "select" || fieldType === "numberSelect") {
          const option = options.find((opt) => opt.value === val);
@@ -104,7 +236,7 @@ const MultipleInput = ({
          case "date":
             return <DateInput {...props} />;
          case "select":
-            return <SelectInput {...props} options={options} />;
+            return <FilterableSelectInput {...props} options={options} />;
          case "numberSelect":
             return <NumberSelectInput {...props} options={options} />;
          default:
@@ -211,9 +343,9 @@ const MultipleInput = ({
                />
 
                {/* Modal */}
-               <div className="relative bg-gray-800 rounded-2xl shadow-2xl border border-gray-700 w-full max-w-md mx-4 max-h-[80vh] overflow-y-auto">
+               <div className="relative bg-gray-800 rounded-2xl shadow-2xl border border-gray-700 w-full max-w-lg mx-4 min-h-[70vh] max-h-[90vh] flex flex-col">
                   {/* Header */}
-                  <div className="flex items-center justify-between p-6 border-b border-gray-700">
+                  <div className="flex items-center justify-between px-6 py-3 border-b border-gray-700 flex-shrink-0">
                      <h3 className="text-xl font-semibold text-white">
                         {label || "Add Multiple Items"}
                      </h3>
@@ -235,8 +367,8 @@ const MultipleInput = ({
                      </button>
                   </div>
 
-                  {/* Content */}
-                  <div className="p-6">
+                  {/* Content - Scrollable */}
+                  <div className="p-6 overflow-y-auto flex-1 min-h-0">
                      {/* Display saved values as chips */}
                      {currentValues.filter((v) => v && v !== "").length > 0 && (
                         <div className="flex flex-wrap gap-2 mb-4 p-3 bg-gray-700/30 rounded-lg border border-gray-600/50">
@@ -272,40 +404,39 @@ const MultipleInput = ({
                      )}
 
                      {/* Input fields */}
-                     {currentValues.map((val, index) => (
-                        <div
-                           key={index}
-                           className="flex items-center gap-2 mb-2"
-                        >
-                           <div className="flex-1">
-                              {renderInput(val, index)}
-                           </div>
-                           {currentValues.length > 1 && (
-                              <button
-                                 type="button"
-                                 onClick={() => removeValue(index)}
-                                 className="p-2 text-red-400 hover:text-red-300 transition-colors cursor-pointer"
-                              >
-                                 <svg
-                                    className="w-4 h-4"
-                                    fill="currentColor"
-                                    viewBox="0 0 20 20"
+                     <div className="space-y-3">
+                        {currentValues.map((val, index) => (
+                           <div key={index} className="flex items-center gap-2">
+                              <div className="flex-1">
+                                 {renderInput(val, index)}
+                              </div>
+                              {currentValues.length > 1 && (
+                                 <button
+                                    type="button"
+                                    onClick={() => removeValue(index)}
+                                    className="p-2 text-red-400 hover:text-red-300 transition-colors cursor-pointer"
                                  >
-                                    <path
-                                       fillRule="evenodd"
-                                       d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
-                                       clipRule="evenodd"
-                                    />
-                                 </svg>
-                              </button>
-                           )}
-                        </div>
-                     ))}
+                                    <svg
+                                       className="w-4 h-4"
+                                       fill="currentColor"
+                                       viewBox="0 0 20 20"
+                                    >
+                                       <path
+                                          fillRule="evenodd"
+                                          d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                                          clipRule="evenodd"
+                                       />
+                                    </svg>
+                                 </button>
+                              )}
+                           </div>
+                        ))}
+                     </div>
 
                      <button
                         type="button"
                         onClick={addNewValue}
-                        className="flex items-center gap-2 px-3 py-2 text-sm text-blue-400 cursor-pointer hover:text-blue-300 transition-colors"
+                        className="flex items-center gap-2 px-3 py-2 mt-4 text-sm text-blue-400 cursor-pointer hover:text-blue-300 transition-colors"
                      >
                         <svg
                            className="w-4 h-4"
@@ -329,7 +460,7 @@ const MultipleInput = ({
                   </div>
 
                   {/* Footer */}
-                  <div className="flex items-center justify-end gap-3 p-6 border-t border-gray-700">
+                  <div className="flex items-center justify-end gap-3 px-6 py-3 border-t border-gray-700 flex-shrink-0">
                      <button
                         onClick={handleCancel}
                         className="px-4 py-2 text-gray-400 hover:text-white transition-colors cursor-pointer"

@@ -15,6 +15,10 @@ export async function createProduct({
 }) {
    const created_by = getUserId();
    if (!created_by) throw new Error("Not authenticated");
+
+   // Validate required SKU ID
+   if (!sku_id?.trim()) throw new Error("SKU ID is required");
+
    const { data, error } = await supabase
       .from("products")
       .insert([
@@ -27,13 +31,18 @@ export async function createProduct({
             created_by,
             price,
             quantity_per_kg,
-            sku_id,
+            sku_id: sku_id.trim(),
             increment_per_rupee,
          },
       ])
       .select()
       .single();
-   if (error) throw new Error(error.message);
+   if (error) {
+      if (error.code === "23505" && error.details?.includes("sku_id")) {
+         throw new Error("SKU ID already exists. Please use a unique SKU ID.");
+      }
+      throw new Error(error.message);
+   }
    return data;
 }
 
@@ -48,13 +57,33 @@ export async function updateProduct(id, updates) {
       .single();
    if (error) throw new Error(error.message);
    if (data.created_by !== userId) throw new Error("Not authorized");
+
+   // Validate SKU ID if it's being updated
+   if (updates.sku_id !== undefined && !updates.sku_id?.trim()) {
+      throw new Error("SKU ID is required");
+   }
+
+   // Process SKU ID trimming if provided
+   const processedUpdates = { ...updates };
+   if (processedUpdates.sku_id !== undefined) {
+      processedUpdates.sku_id = processedUpdates.sku_id.trim();
+   }
+
    const { data: updated, error: updateError } = await supabase
       .from("products")
-      .update(updates)
+      .update(processedUpdates)
       .eq("id", id)
       .select()
       .single();
-   if (updateError) throw new Error(updateError.message);
+   if (updateError) {
+      if (
+         updateError.code === "23505" &&
+         updateError.details?.includes("sku_id")
+      ) {
+         throw new Error("SKU ID already exists. Please use a unique SKU ID.");
+      }
+      throw new Error(updateError.message);
+   }
    return updated;
 }
 

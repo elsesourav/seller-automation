@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { getAllProducts } from "../../api/productsApi";
 import {
    DateInput,
    MultipleInput,
@@ -26,7 +27,43 @@ const CustomForm = ({
    onExternalChange = null,
 }) => {
    const [formData, setFormData] = useState({});
+   const [products, setProducts] = useState([]);
    const scrollContainerRef = useRef(null);
+
+   // Load products for dynamic options (only if needed)
+   useEffect(() => {
+      // Check if any field in the schema has name "products" and type "multiple"
+      const hasProductsField = () => {
+         if (!schemaProp) return false;
+
+         let schema;
+         if (Array.isArray(schemaProp)) {
+            schema = schemaProp;
+         } else if (schemaProp && Array.isArray(schemaProp.schema)) {
+            schema = schemaProp.schema;
+         } else {
+            return false;
+         }
+
+         return schema.some(
+            (field) => field.name === "products" && field.type === "multiple"
+         );
+      };
+
+      if (hasProductsField()) {
+         const loadProducts = async () => {
+            try {
+               const productData = await getAllProducts();
+               setProducts(productData);
+            } catch (error) {
+               console.error("Error loading products:", error);
+               setProducts([]);
+            }
+         };
+
+         loadProducts();
+      }
+   }, [schemaProp]);
 
    // Apply custom scrollbar styles programmatically
    useEffect(() => {
@@ -108,6 +145,18 @@ const CustomForm = ({
 
    // Render a single field using the correct input component
    const renderField = (field) => {
+      // Dynamic options handling for products field
+      let dynamicOptions = field.options;
+
+      if (field.name === "products" && field.type === "multiple") {
+         dynamicOptions = products.map((product) => ({
+            value: product.sku_id,
+            label: `${product.name}${
+               product.label ? ` (${product.label})` : ""
+            }`,
+         }));
+      }
+
       const commonProps = {
          label: field.label,
          value: getCurrentValue(field.name, field.type),
@@ -116,7 +165,7 @@ const CustomForm = ({
          required: field.required,
          helperText: field.helperText,
          width: "w-full",
-         options: field.options,
+         options: dynamicOptions,
          min: field.min,
          max: field.max,
          step: field.step,
@@ -195,10 +244,7 @@ const CustomForm = ({
             >
                <div className="relative w-full h-auto flex flex-col gap-3">
                   {rows.map((row, rowIdx) => (
-                     <div
-                        key={rowIdx}
-                        className="grid grid-cols-4 gap-4 h-22"
-                     >
+                     <div key={rowIdx} className="grid grid-cols-4 gap-4 h-22">
                         {row.map((field, colIdx) => (
                            <div
                               key={

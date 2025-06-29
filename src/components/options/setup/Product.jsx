@@ -153,10 +153,11 @@ export default function Product() {
                useIndianFormat={true}
             />
             <TextInput
-               placeholder="SKU ID"
+               placeholder="SKU ID *"
                value={form.sku_id}
                onChange={(val) => setForm((f) => ({ ...f, sku_id: val }))}
                className="mb-3"
+               required={true}
             />
             <NumberInput
                placeholder="Increment per Rupee"

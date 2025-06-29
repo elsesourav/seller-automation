@@ -60,7 +60,7 @@ CREATE TABLE
       created_by UUID REFERENCES users (id),
       price NUMERIC(10, 2),
       quantity_per_kg NUMERIC(10, 2),
-      sku_id TEXT,
+      sku_id TEXT NOT NULL UNIQUE,
       increment_per_rupee NUMERIC(10, 2),
       created_at TIMESTAMP DEFAULT now (),
       updated_at TIMESTAMP DEFAULT now ()
