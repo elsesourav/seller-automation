@@ -172,3 +172,36 @@ export const makeSchemaWithWidths = (fields) => {
    const widths = rows.map((row) => row.map((f) => f.width || "full"));
    return { schema: fields, widths };
 };
+
+/**
+ * Reverse function for makeSchemaWithWidths
+ * Converts a schema with widths back to a flat array of fields with width properties
+ * @param {Object} schemaWithWidths - Object containing schema and widths arrays
+ * @param {Array} schemaWithWidths.schema - Array of field objects
+ * @param {Array} schemaWithWidths.widths - Nested array of width values organized by rows
+ * @returns {Array} Array of field objects with width properties applied
+ */
+export const parseSchemaWithWidths = (schemaWithWidths) => {
+   if (!schemaWithWidths || !schemaWithWidths.schema) {
+      return [];
+   }
+
+   const { schema, widths } = schemaWithWidths;
+
+   // If no widths provided, return schema as-is with normalized fields
+   if (!widths || !Array.isArray(widths)) {
+      return schema.map((field) => normalizeField(field));
+   }
+
+   // Flatten the nested widths array to match field order
+   const flatWidths = widths.flat();
+
+   // Apply widths to corresponding fields
+   return schema.map((field, index) => {
+      const normalizedField = normalizeField(field);
+      return {
+         ...normalizedField,
+         width: flatWidths[index] || field.width || "full",
+      };
+   });
+};

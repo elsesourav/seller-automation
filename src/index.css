@@ -3,12 +3,12 @@
 
 @custom-variant dark (&:is(.dark *));
 
-.es-bg {
+/* .es-bg {
    position: relative;
    background: transparent;
    overflow: hidden;
    z-index: 1;
-   
+
    &::before {
       content: "";
       position: absolute;
@@ -28,7 +28,6 @@
       border: none;
    }
 
-
    &::after {
       content: "";
       position: absolute;
@@ -37,11 +36,7 @@
       width: 100%;
       height: 100%;
       border-radius: inherit;
-      background: linear-gradient(
-         to right,
-         #2b7fff,
-         #9810fa
-      );
+      background: linear-gradient(to right, #2b7fff, #9810fa);
       transition: linear 200ms all;
       opacity: 0;
       z-index: -1;
@@ -64,7 +59,7 @@
 
 .es-bg-active::after {
    opacity: 1;
-}
+} */
 
 /* Custom styles for Chrome Extension */
 body {

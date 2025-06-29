@@ -7,7 +7,12 @@ import {
    updateBaseForm,
 } from "../../../api/baseFormsApi";
 import { getAllCategories } from "../../../api/categoriesApi";
-import { createForm, getFormById } from "../../../api/formsApi";
+import {
+   createForm,
+   deleteForm,
+   getFormById,
+   updateForm,
+} from "../../../api/formsApi";
 import { fetchAllUsers, getUserId } from "../../../api/usersApi";
 import { getAllVerticals } from "../../../api/verticalsApi";
 import ConfirmDialog from "../../ConfirmDialog";
@@ -194,11 +199,12 @@ export default function InfoForm() {
       try {
          let formId = null;
          if (pendingSchema) {
-            // Only upload structure and created_by to forms table
+            // Upload schema to forms table and get form ID
             const formRes = await createForm({ structure: pendingSchema });
             formId = formRes.id;
             setPendingSchema(null);
          }
+         // Create base form with the form_id (can be null if no schema)
          await createBaseForm({ ...formData, form_id: formId });
          setAlert({ type: "success", message: "Form created!" });
          setShowModal(false);
@@ -214,13 +220,26 @@ export default function InfoForm() {
          setAlert({ type: "error", message: e.message });
       }
    };
-   
+
    const handleEdit = async (formData) => {
       try {
+         // Handle schema updates if there's a pending schema
+         if (pendingSchema) {
+            if (editForm.form_id) {
+               // Update existing schema
+               await updateForm(editForm.form_id, { structure: pendingSchema });
+            } else {
+               // Create new schema and update base form with form_id
+               const formRes = await createForm({ structure: pendingSchema });
+               formData.form_id = formRes.id;
+            }
+            setPendingSchema(null);
+         }
+
          await updateBaseForm(editForm.id, formData);
          setAlert({ type: "success", message: "Form updated!" });
          setEditForm(null);
-         setShowModal(false);
+         setShowEditSection(false);
          setForm({
             name: "",
             label: "",
@@ -234,9 +253,30 @@ export default function InfoForm() {
          setAlert({ type: "error", message: e.message });
       }
    };
+
    const handleDelete = async (id) => {
       try {
+         // First, get the base form to check if it has an associated form_id
+         const baseFormToDelete = forms.find((f) => f.id === id);
+
+         // Delete the base form first
          await deleteBaseForm(id);
+
+         // If the base form had an associated form schema, delete that too
+         if (baseFormToDelete?.form_id) {
+            try {
+               await deleteForm(baseFormToDelete.form_id);
+               console.log(
+                  `[Delete] Also deleted associated form schema: ${baseFormToDelete.form_id}`
+               );
+            } catch (formDeleteError) {
+               console.warn(
+                  `[Delete] Could not delete associated form schema: ${formDeleteError.message}`
+               );
+               // Don't throw here - the base form deletion was successful
+            }
+         }
+
          setAlert({ type: "success", message: "Form deleted!" });
          setForms(await getAllBaseForms());
       } catch (e) {
@@ -244,14 +284,23 @@ export default function InfoForm() {
       }
    };
 
-   function FormSchemaPreviewModal({ formId, onClose }) {
+   function FormSchemaPreviewModal({ formId, pendingSchema, onClose }) {
       const [schema, setSchema] = useState(null);
       const [loading, setLoading] = useState(true);
+
       useEffect(() => {
          async function fetchSchema() {
             setLoading(true);
             try {
-               if (typeof formId === "string" && formId.length > 0) {
+               if (pendingSchema) {
+                  // Use pending schema if available (for new forms)
+                  console.log(
+                     "[Form View] Using pending schema:",
+                     pendingSchema
+                  );
+                  setSchema(pendingSchema);
+               } else if (typeof formId === "string" && formId.length > 0) {
+                  // Load from database for existing forms
                   const form = await getFormById(formId);
                   console.log(
                      "[Form View] Loaded schema for formId:",
@@ -260,7 +309,7 @@ export default function InfoForm() {
                   );
                   setSchema(form?.structure || null);
                } else {
-                  console.log("[Form View] No valid formId:", formId);
+                  console.log("[Form View] No valid formId or pending schema");
                   setSchema(null);
                }
             } catch (err) {
@@ -271,44 +320,69 @@ export default function InfoForm() {
             }
          }
          fetchSchema();
-      }, [formId]);
+      }, [formId, pendingSchema]);
+
       return (
          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
-            <div className="bg-gray-900 rounded-xl p-8 border border-gray-700 w-full max-w-xl relative">
+            <div className="bg-gray-900 rounded-xl border border-gray-700 w-full max-w-4xl max-h-[90vh] flex flex-col relative">
                <button
-                  className="absolute top-2 right-2 text-gray-400 hover:text-white text-xl"
+                  className="absolute top-2 right-2 text-gray-400 hover:text-white text-xl z-10"
                   onClick={onClose}
                >
                   &times;
                </button>
-               <h4 className="text-lg font-bold mb-4 flex items-center gap-2">
-                  <FiFileText className="text-blue-400" /> Form Schema Preview
-               </h4>
-               {loading ? (
-                  <div className="text-gray-400">Loading schema...</div>
-               ) : schema ? (
-                  <CustomForm schema={schema} onSubmit={() => {}} />
-               ) : (
-                  <div className="text-gray-400">No schema found.</div>
-               )}
+               <div className="p-8 pb-4 flex-shrink-0">
+                  <h4 className="text-lg font-bold flex items-center gap-2">
+                     <FiFileText className="text-blue-400" /> Form Schema
+                     Preview
+                  </h4>
+               </div>
+               <div
+                  className="flex-1 overflow-y-auto px-8 pb-8"
+                  style={{ minHeight: 0 }}
+               >
+                  {loading ? (
+                     <div className="text-gray-400">Loading schema...</div>
+                  ) : schema ? (
+                     <div className="h-full">
+                        <CustomForm schema={schema} onSubmit={() => {}} />
+                     </div>
+                  ) : (
+                     <div className="text-gray-400">No schema found.</div>
+                  )}
+               </div>
             </div>
          </div>
       );
    }
 
-   // Remove formSchema and related logic, use only pendingSchema for new/edited schema
+   // Handle opening FormBuilder - preserve pending schema if it exists
    const handleOpenFormBuilder = async () => {
       let schema = null;
-      if (form.form_id) {
+
+      // Priority: 1. Use existing pendingSchema if available (continue editing)
+      if (pendingSchema) {
+         schema = pendingSchema;
+         console.log("[Form Builder] Continuing with pending schema");
+      }
+      // 2. Load from database if form_id exists and no pending schema
+      else if (form.form_id) {
          try {
             const formObj = await getFormById(form.form_id);
             schema = formObj?.structure || null;
+            console.log("[Form Builder] Loaded schema from database");
          } catch (err) {
             console.log("[Form Builder] Error loading form schema:", err);
             schema = null;
          }
       }
-      setPendingSchema(schema); // Always set pendingSchema for editing
+      // 3. Start with empty schema for new forms
+      else {
+         console.log("[Form Builder] Starting with new schema");
+         schema = null;
+      }
+
+      setPendingSchema(schema);
       setShowFormBuilder(true);
    };
 
@@ -441,19 +515,6 @@ export default function InfoForm() {
                                           <FiEdit2 />
                                        </button>
                                     )}
-                                    {f.created_by === getUserId() && (
-                                       <button
-                                          className="text-red-400 hover:text-red-200 flex items-center gap-1 cursor-pointer"
-                                          onClick={() =>
-                                             setConfirm({
-                                                open: true,
-                                                id: f.id,
-                                             })
-                                          }
-                                       >
-                                          <FiTrash2 />
-                                       </button>
-                                    )}
                                  </div>
                               </div>
                            ))
@@ -472,6 +533,39 @@ export default function InfoForm() {
                      <FiFileText className="text-blue-400" />
                      Edit Info Form
                   </h3>
+                  {/* Form Schema Section for Edit */}
+                  <div className="mb-6 flex flex-col gap-2 bg-gray-800/60 rounded-lg p-4 border border-gray-700">
+                     <div className="flex gap-2 items-center">
+                        <button
+                           className={`px-3 py-2 rounded bg-blue-600 hover:bg-blue-700 text-white font-medium transition-all ${
+                              !form.form_id && !pendingSchema
+                                 ? "opacity-50 cursor-not-allowed"
+                                 : ""
+                           }`}
+                           disabled={!form.form_id && !pendingSchema}
+                           onClick={() => setShowFormSchemaPreview(true)}
+                        >
+                           Form View
+                        </button>
+                        <button
+                           className="px-3 py-2 rounded bg-purple-600 hover:bg-purple-700 text-white font-medium transition-all"
+                           onClick={handleOpenFormBuilder}
+                        >
+                           {pendingSchema
+                              ? "Continue Form"
+                              : form.form_id
+                              ? "Edit Form"
+                              : "Setup Form"}
+                        </button>
+                        <span className="text-xs text-gray-400 ml-2">
+                           {pendingSchema
+                              ? "Unsaved changes"
+                              : form.form_id
+                              ? "Schema linked"
+                              : "No schema linked"}
+                        </span>
+                     </div>
+                  </div>
                   <InfoFormForm
                      initialForm={form}
                      verticals={verticals}
@@ -479,6 +573,7 @@ export default function InfoForm() {
                      onCancel={() => {
                         setShowEditSection(false);
                         setEditForm(null);
+                        setPendingSchema(null); // Clear pending schema on cancel
                      }}
                      submitLabel="Update"
                      showDelete={true}
@@ -503,11 +598,11 @@ export default function InfoForm() {
                      <div className="flex gap-2 items-center">
                         <button
                            className={`px-3 py-2 rounded bg-blue-600 hover:bg-blue-700 text-white font-medium transition-all ${
-                              !form.form_id
+                              !form.form_id && !pendingSchema
                                  ? "opacity-50 cursor-not-allowed"
                                  : ""
                            }`}
-                           disabled={!form.form_id}
+                           disabled={!form.form_id && !pendingSchema}
                            onClick={() => setShowFormSchemaPreview(true)}
                         >
                            Form View
@@ -516,10 +611,18 @@ export default function InfoForm() {
                            className="px-3 py-2 rounded bg-purple-600 hover:bg-purple-700 text-white font-medium transition-all"
                            onClick={handleOpenFormBuilder}
                         >
-                           Setup Form
+                           {pendingSchema
+                              ? "Continue Form"
+                              : form.form_id
+                              ? "Edit Form"
+                              : "Setup Form"}
                         </button>
                         <span className="text-xs text-gray-400 ml-2">
-                           {form.form_id ? "Schema linked" : "No schema linked"}
+                           {pendingSchema
+                              ? "Unsaved changes"
+                              : form.form_id
+                              ? "Schema linked"
+                              : "No schema linked"}
                         </span>
                      </div>
                   </div>
@@ -530,6 +633,7 @@ export default function InfoForm() {
                      onCancel={() => {
                         setShowModal(false);
                         setEditForm(null);
+                        setPendingSchema(null); // Clear pending schema on cancel
                      }}
                      submitLabel="Add"
                      showDelete={false}
@@ -544,15 +648,25 @@ export default function InfoForm() {
                <div className="bg-gray-900 rounded-xl p-8 border border-gray-700 w-full max-w-2xl">
                   <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
                      <FiFileText className="text-blue-400" />
-                     Create New Form Schema
+                     {pendingSchema
+                        ? "Continue Editing Form Schema"
+                        : form.form_id
+                        ? "Edit Form Schema"
+                        : "Create New Form Schema"}
                   </h3>
                   <FormBuilder
                      isOpen={showFormBuilder}
-                     onClose={() => setShowFormBuilder(false)}
+                     onClose={() => {
+                        setShowFormBuilder(false);
+                        // Don't clear pendingSchema on close - preserve it for continuing later
+                     }}
                      onSaveSchema={(schemaObj) => {
                         setShowFormBuilder(false);
                         setPendingSchema(schemaObj); // Save schema for upload on submit
-                        setShowModal(true);
+                        // Only open add modal if we're not already in edit mode
+                        if (!showEditSection) {
+                           setShowModal(true);
+                        }
                      }}
                      schema={pendingSchema}
                   />
@@ -564,11 +678,13 @@ export default function InfoForm() {
          <ConfirmDialog
             open={confirm.open}
             title="Delete Info Form"
-            message="Are you sure you want to delete this info form?"
+            message="Are you sure you want to delete this info form? This will also delete any associated form schema."
             onConfirm={async () => {
                await handleDelete(confirm.id);
                setShowModal(false);
+               setShowEditSection(false);
                setEditForm(null);
+               setPendingSchema(null); // Clear pending schema on delete
                setConfirm({ open: false, id: null });
             }}
             onCancel={() => setConfirm({ open: false, id: null })}
@@ -578,7 +694,8 @@ export default function InfoForm() {
          {showFormSchemaPreview && (
             <FormSchemaPreviewModal
                formId={form.form_id}
-               onClose={() => setFormSchemaPreview(false)}
+               pendingSchema={pendingSchema}
+               onClose={() => setShowFormSchemaPreview(false)}
             />
          )}
       </div>

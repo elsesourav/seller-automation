@@ -69,16 +69,20 @@ const NumberInput = ({
    };
 
    const increment = () => {
-      const newValue = (value || 0) + step;
+      const currentValue =
+         value === "" || value === undefined ? 0 : Number(value);
+      const newValue = currentValue + step;
       if (!max || newValue <= max) {
-         onChange(newValue);
+         onChange(newValue.toString());
       }
    };
 
    const decrement = () => {
-      const newValue = (value || 0) - step;
+      const currentValue =
+         value === "" || value === undefined ? 0 : Number(value);
+      const newValue = currentValue - step;
       if (!min || newValue >= min) {
-         onChange(newValue);
+         onChange(newValue.toString());
       }
    };
 
@@ -90,14 +94,14 @@ const NumberInput = ({
       if (!isNaN(numValue)) {
          // Apply min/max constraints
          if (min !== undefined && numValue < min) {
-            onChange(min);
+            onChange(min.toString());
             return;
          }
          if (max !== undefined && numValue > max) {
-            onChange(max);
+            onChange(max.toString());
             return;
          }
-         onChange(numValue);
+         onChange(numValue.toString());
       } else {
          onChange("");
       }

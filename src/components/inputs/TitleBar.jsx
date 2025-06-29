@@ -5,7 +5,7 @@ const TitleBar = ({
 }) => {
    return (
       <div
-         className={`relative h-full font-bold text-gray-900 dark:text-gray-50 text-2xl grid place-items-center ${width} ${className}`}
+         className={`relative h-full font-bold text-gray-100 dark:text-gray-50 text-2xl grid place-items-center ${width} ${className}`}
       >
          {value}
       </div>

@@ -17,6 +17,7 @@ import {
    FiSave,
    FiTrash2,
    FiType,
+   FiUpload,
    FiX,
 } from "react-icons/fi";
 import { NumberInput, TextInput, TitleBar } from "../inputs";
@@ -30,6 +31,7 @@ import {
    groupFieldsIntoRows,
    makeSchemaWithWidths,
    normalizeField,
+   parseSchemaWithWidths,
 } from "./formUtils";
 
 /********************
@@ -1642,27 +1644,86 @@ const FormPreview = ({ fields, formData, onFormDataChange, onBack }) => {
 };
 
 /********************
- * SCHEMA PREVIEW COMPONENT
+ * SCHEMA EDITOR COMPONENT
  ********************/
-const SchemaPreview = ({ fields, onBack }) => {
+const SchemaEditor = ({ fields, onBack, onApplySchema }) => {
    const { schema, widths } = makeSchemaWithWidths(fields);
+   const [schemaText, setSchemaText] = useState(
+      JSON.stringify({ schema, widths }, null, 2)
+   );
+   const [error, setError] = useState(null);
+
+   // Update schema text when fields change
+   useEffect(() => {
+      const { schema, widths } = makeSchemaWithWidths(fields);
+      setSchemaText(JSON.stringify({ schema, widths }, null, 2));
+   }, [fields]);
+
+   const handleApply = () => {
+      try {
+         const parsedSchema = JSON.parse(schemaText);
+         const fieldsToLoad = parseSchemaWithWidths(parsedSchema);
+         onApplySchema(fieldsToLoad);
+         setError(null);
+         onBack();
+      } catch (err) {
+         setError("Invalid JSON schema: " + err.message);
+      }
+   };
+
+   const handleReset = () => {
+      const { schema, widths } = makeSchemaWithWidths(fields);
+      setSchemaText(JSON.stringify({ schema, widths }, null, 2));
+      setError(null);
+   };
 
    return (
       <div className="flex-1 flex flex-col">
-         <div className="p-4 border-b border-gray-700 flex items-center gap-4">
-            <button
-               onClick={onBack}
-               className="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors"
-            >
-               ← Back to Editor
-            </button>
-            <h3 className="text-lg font-semibold text-white">Form Schema</h3>
+         <div className="p-4 border-b border-gray-700 flex items-center justify-between">
+            <div className="flex items-center gap-4">
+               <button
+                  onClick={onBack}
+                  className="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors"
+               >
+                  ← Back to Editor
+               </button>
+               <h3 className="text-lg font-semibold text-white">
+                  Edit Form Schema
+               </h3>
+            </div>
+            <div className="flex items-center gap-2">
+               <button
+                  onClick={handleReset}
+                  className="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors"
+               >
+                  Reset
+               </button>
+               <button
+                  onClick={handleApply}
+                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+               >
+                  Apply Changes
+               </button>
+            </div>
          </div>
 
-         <div className="flex-1 p-6 overflow-y-auto custom-scrollbar">
-            <pre className="bg-gray-800 p-4 rounded-lg text-sm text-green-400 font-mono overflow-x-auto">
-               {JSON.stringify({ schema, widths }, null, 2)}
-            </pre>
+         <div className="flex-1 p-6 overflow-hidden flex flex-col">
+            {error && (
+               <div className="mb-4 p-3 bg-red-500/20 border border-red-500 rounded-lg">
+                  <p className="text-red-400 text-sm">{error}</p>
+               </div>
+            )}
+            <textarea
+               value={schemaText}
+               onChange={(e) => setSchemaText(e.target.value)}
+               className="flex-1 bg-gray-800 text-green-400 font-mono text-sm p-4 rounded-lg border border-gray-700 focus:border-blue-500 focus:outline-none resize-none"
+               placeholder="Edit your form schema here..."
+            />
+            <div className="mt-4 text-sm text-gray-400">
+               <p>• Edit the JSON schema directly</p>
+               <p>• Click "Apply Changes" to update the form</p>
+               <p>• Use "Reset" to revert to current form state</p>
+            </div>
          </div>
       </div>
    );
@@ -1682,37 +1743,53 @@ const FormBuilder = ({ isOpen, onClose, onSaveSchema, schema }) => {
    const [fields, setFields] = useState([]);
    const [editingField, setEditingField] = useState(null);
    const [showPreview, setShowPreview] = useState(false);
-   const [showExport, setShowExport] = useState(false);
+   const [showSchemaEditor, setShowSchemaEditor] = useState(false);
    const [formData, setFormData] = useState({});
+   const fileInputRef = useRef(null);
 
    // Initialize drag and drop functionality
    const dragAndDrop = useDragAndDrop(fields);
+
+   // Load schema data when component opens or schema changes
+   useEffect(() => {
+      if (isOpen && schema) {
+         try {
+            // Schema is expected to be in the same format as onSaveSchema output
+            const fieldsToLoad = parseSchemaWithWidths(schema);
+            setFields(fieldsToLoad);
+         } catch (error) {
+            console.warn("Error loading schema:", error);
+            setFields([]);
+         }
+      } else if (isOpen && !schema) {
+         // Reset fields when opening without schema
+         setFields([]);
+      }
+   }, [isOpen, schema]);
 
    useEffect(() => {
       if (isOpen) {
          document.body.style.overflow = "hidden";
       } else {
          document.body.style.overflow = "unset";
+         // Reset editing state when closing
+         setEditingField(null);
+         setShowPreview(false);
+         setShowSchemaEditor(false);
+         setFormData({});
       }
       return () => {
          document.body.style.overflow = "unset";
       };
    }, [isOpen]);
 
-   // If schema prop is provided, initialize fields from schema (for editing)
-   useEffect(() => {
-      if (schema && Array.isArray(schema)) {
-         setFields(schema);
-      }
-   }, [schema, isOpen]);
-
    // Add new field to canvas
    const addField = useCallback(
       (fieldType, insertIndex = null, fieldOptions = {}) => {
          const newField = createNewField(fields.length, fieldType);
 
-         // Apply any additional field options (width, positioning, etc.)
-         const enhancedField = { ...newField, ...fieldOptions };
+         // Apply any additional field options (width, positioning, etc.) and normalize
+         const enhancedField = normalizeField({ ...newField, ...fieldOptions });
 
          if (insertIndex !== null) {
             setFields((prev) => {
@@ -1831,6 +1908,38 @@ const FormBuilder = ({ isOpen, onClose, onSaveSchema, schema }) => {
       }));
    }, []);
 
+   // Handle import schema from file
+   const handleImport = useCallback(() => {
+      fileInputRef.current?.click();
+   }, []);
+
+   const handleFileChange = useCallback((event) => {
+      const file = event.target.files?.[0];
+      if (file) {
+         const reader = new FileReader();
+         reader.onload = (e) => {
+            try {
+               const content = e.target?.result;
+               const parsedSchema = JSON.parse(content);
+               const fieldsToLoad = parseSchemaWithWidths(parsedSchema);
+               setFields(fieldsToLoad);
+               setFormData({});
+            } catch (error) {
+               alert("Invalid JSON file: " + error.message);
+            }
+         };
+         reader.readAsText(file);
+      }
+      // Reset input value so same file can be selected again
+      event.target.value = "";
+   }, []);
+
+   // Apply schema from editor
+   const handleApplySchema = useCallback((newFields) => {
+      setFields(newFields);
+      setFormData({});
+   }, []);
+
    // Generate and download form schema
    const handleExport = useCallback(() => {
       const schema = makeSchemaWithWidths(fields);
@@ -1879,6 +1988,13 @@ const FormBuilder = ({ isOpen, onClose, onSaveSchema, schema }) => {
                         </p>
                      </div>
                      <div className="flex items-center gap-2">
+                        <button
+                           onClick={handleImport}
+                           className="flex items-center gap-2 px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg transition-colors"
+                        >
+                           <FiUpload className="w-4 h-4" />
+                           Import
+                        </button>
                         {fields.length > 0 && (
                            <>
                               <button
@@ -1889,11 +2005,13 @@ const FormBuilder = ({ isOpen, onClose, onSaveSchema, schema }) => {
                                  {showPreview ? "Hide Preview" : "Preview"}
                               </button>
                               <button
-                                 onClick={() => setShowExport(!showExport)}
+                                 onClick={() =>
+                                    setShowSchemaEditor(!showSchemaEditor)
+                                 }
                                  className="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors"
                               >
                                  <FiCode className="w-4 h-4" />
-                                 Schema
+                                 {showSchemaEditor ? "Hide Schema" : "Schema"}
                               </button>
                               <button
                                  onClick={handleExport}
@@ -1918,6 +2036,15 @@ const FormBuilder = ({ isOpen, onClose, onSaveSchema, schema }) => {
                            <FiX className="w-6 h-6" />
                         </button>
                      </div>
+
+                     {/* Hidden file input for import */}
+                     <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept=".json"
+                        onChange={handleFileChange}
+                        className="hidden"
+                     />
                   </div>
                </div>
                {/* Content Area */}
@@ -1925,7 +2052,7 @@ const FormBuilder = ({ isOpen, onClose, onSaveSchema, schema }) => {
                   {/* Left Sidebar - Field Palette */}
                   <FieldPalette />
 
-                  {/* Right Content - Canvas or Preview */}
+                  {/* Right Content - Canvas, Preview, or Schema Editor */}
                   {showPreview ? (
                      <FormPreview
                         fields={fields}
@@ -1933,10 +2060,11 @@ const FormBuilder = ({ isOpen, onClose, onSaveSchema, schema }) => {
                         onFormDataChange={handleFormDataChange}
                         onBack={() => setShowPreview(false)}
                      />
-                  ) : showExport ? (
-                     <SchemaPreview
+                  ) : showSchemaEditor ? (
+                     <SchemaEditor
                         fields={fields}
-                        onBack={() => setShowExport(false)}
+                        onBack={() => setShowSchemaEditor(false)}
+                        onApplySchema={handleApplySchema}
                      />
                   ) : (
                      <FormCanvas
