@@ -22,14 +22,14 @@ import {
 import { NumberInput, TextInput, TitleBar } from "../inputs";
 import CustomForm from "./CustomForm";
 import {
-   makeSchemaWithWidths,
-   getFieldTypeInfo,
-   getFieldDescription,
-   normalizeField,
    createNewField,
-   groupFieldsIntoRows,
-   FIELD_TYPES,
    FIELD_ICONS,
+   FIELD_TYPES,
+   getFieldDescription,
+   getFieldTypeInfo,
+   groupFieldsIntoRows,
+   makeSchemaWithWidths,
+   normalizeField,
 } from "./formUtils";
 
 /********************
@@ -1678,7 +1678,7 @@ const SchemaPreview = ({ fields, onBack }) => {
  *
  *
  * ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||*/
-const FormBuilder = ({ isOpen, onClose, onSaveSchema }) => {
+const FormBuilder = ({ isOpen, onClose, onSaveSchema, schema }) => {
    const [fields, setFields] = useState([]);
    const [editingField, setEditingField] = useState(null);
    const [showPreview, setShowPreview] = useState(false);
@@ -1698,6 +1698,13 @@ const FormBuilder = ({ isOpen, onClose, onSaveSchema }) => {
          document.body.style.overflow = "unset";
       };
    }, [isOpen]);
+
+   // If schema prop is provided, initialize fields from schema (for editing)
+   useEffect(() => {
+      if (schema && Array.isArray(schema)) {
+         setFields(schema);
+      }
+   }, [schema, isOpen]);
 
    // Add new field to canvas
    const addField = useCallback(

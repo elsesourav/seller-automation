@@ -31,7 +31,7 @@ export default function InfoForm() {
       status: "private",
       vertical_id: "",
       category_id: "",
-      form_id: null, // will be set by FormBuilder
+      // Remove form_id from here, it will be set after uploading schema
    });
    const [confirm, setConfirm] = useState({ open: false, id: null });
    const [alert, setAlert] = useState(null);
@@ -41,7 +41,7 @@ export default function InfoForm() {
    const [filterCategory, setFilterCategory] = useState("");
    const [showFormBuilder, setShowFormBuilder] = useState(false);
    const [showFormSchemaPreview, setShowFormSchemaPreview] = useState(false);
-   const [formSchema, setFormSchema] = useState(null);
+   // const [formSchema, setFormSchema] = useState(null);
    const [pendingSchema, setPendingSchema] = useState(null);
 
    useEffect(() => {
@@ -107,7 +107,9 @@ export default function InfoForm() {
       useEffect(() => {
          setForm(initialForm);
       }, [initialForm]);
+
       const formCategories = getFormCategories(form.vertical_id);
+
       return (
          <form
             onSubmit={(e) => {
@@ -190,8 +192,9 @@ export default function InfoForm() {
    // Handlers
    const handleAdd = async (formData) => {
       try {
-         let formId = formData.form_id;
+         let formId = null;
          if (pendingSchema) {
+            // Only upload structure and created_by to forms table
             const formRes = await createForm({ structure: pendingSchema });
             formId = formRes.id;
             setPendingSchema(null);
@@ -205,13 +208,13 @@ export default function InfoForm() {
             status: "private",
             vertical_id: "",
             category_id: "",
-            form_id: null,
          });
          setForms(await getAllBaseForms());
       } catch (e) {
          setAlert({ type: "error", message: e.message });
       }
    };
+   
    const handleEdit = async (formData) => {
       try {
          await updateBaseForm(editForm.id, formData);
@@ -293,25 +296,19 @@ export default function InfoForm() {
       );
    }
 
-   // When opening FormBuilder for editing, always fetch the latest schema
+   // Remove formSchema and related logic, use only pendingSchema for new/edited schema
    const handleOpenFormBuilder = async () => {
+      let schema = null;
       if (form.form_id) {
          try {
             const formObj = await getFormById(form.form_id);
-            console.log(
-               "[Setup Form] Loaded schema for edit:",
-               form.form_id,
-               formObj?.structure
-            );
-            setFormSchema(formObj?.structure || null);
+            schema = formObj?.structure || null;
          } catch (err) {
-            console.error("[Setup Form] Error loading schema for edit:", err);
-            setFormSchema(null);
+            console.log("[Form Builder] Error loading form schema:", err);
+            schema = null;
          }
-      } else {
-         console.log("[Setup Form] No form_id, starting new schema");
-         setFormSchema(null);
       }
+      setPendingSchema(schema); // Always set pendingSchema for editing
       setShowFormBuilder(true);
    };
 
@@ -557,7 +554,7 @@ export default function InfoForm() {
                         setPendingSchema(schemaObj); // Save schema for upload on submit
                         setShowModal(true);
                      }}
-                     initialSchema={formSchema}
+                     schema={pendingSchema}
                   />
                </div>
             </div>
@@ -581,7 +578,7 @@ export default function InfoForm() {
          {showFormSchemaPreview && (
             <FormSchemaPreviewModal
                formId={form.form_id}
-               onClose={() => setShowFormSchemaPreview(false)}
+               onClose={() => setFormSchemaPreview(false)}
             />
          )}
       </div>
