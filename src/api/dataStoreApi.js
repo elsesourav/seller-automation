@@ -1,18 +1,30 @@
 import { supabase } from "../lib/supabaseClient";
+import { getUserId } from "./usersApi";
 
 // Create a new data store entry
 export async function createDataStore({ data }) {
+   const created_by = getUserId();
+   if (!created_by) throw new Error("Not authenticated");
    const { data: created, error } = await supabase
       .from("data_store")
-      .insert([{ data }])
+      .insert([{ data, created_by }])
       .select()
       .single();
    if (error) throw new Error(error.message);
    return created;
 }
 
-// Update a data store entry
+// Update a data store entry (only by owner)
 export async function updateDataStore(id, updates) {
+   const userId = getUserId();
+   if (!userId) throw new Error("Not authenticated");
+   const { data: existing, error: fetchError } = await supabase
+      .from("data_store")
+      .select("*")
+      .eq("id", id)
+      .single();
+   if (fetchError) throw new Error(fetchError.message);
+   if (existing.created_by !== userId) throw new Error("Not authorized");
    const { data, error } = await supabase
       .from("data_store")
       .update(updates)
@@ -23,8 +35,17 @@ export async function updateDataStore(id, updates) {
    return data;
 }
 
-// Delete a data store entry
+// Delete a data store entry (only by owner)
 export async function deleteDataStore(id) {
+   const userId = getUserId();
+   if (!userId) throw new Error("Not authenticated");
+   const { data, error: fetchError } = await supabase
+      .from("data_store")
+      .select("*")
+      .eq("id", id)
+      .single();
+   if (fetchError) throw new Error(fetchError.message);
+   if (data.created_by !== userId) throw new Error("Not authorized");
    const { error } = await supabase.from("data_store").delete().eq("id", id);
    if (error) throw new Error(error.message);
    return { success: true };

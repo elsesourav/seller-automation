@@ -72,6 +72,7 @@ DROP TABLE IF EXISTS forms CASCADE;
 CREATE TABLE
    forms (
       id UUID PRIMARY KEY DEFAULT gen_random_uuid (),
+      created_by UUID REFERENCES users (id),
       structure JSONB NOT NULL,
       created_at TIMESTAMP DEFAULT now ()
    );
@@ -117,6 +118,7 @@ DROP TABLE IF EXISTS data_store CASCADE;
 CREATE TABLE
    data_store (
       id UUID PRIMARY KEY DEFAULT gen_random_uuid (),
+      created_by UUID REFERENCES users (id),
       data JSONB NOT NULL,
       created_at TIMESTAMP DEFAULT now ()
    );

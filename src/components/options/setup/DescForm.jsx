@@ -633,7 +633,7 @@ export default function DescForm() {
                         setPendingSchema(null); // Clear pending schema on cancel
                      }}
                      submitLabel="Update"
-                     showDelete={true}
+                     showDelete={editForm?.created_by === getUserId()}
                      onDelete={() =>
                         setConfirm({ open: true, id: editForm.id })
                      }

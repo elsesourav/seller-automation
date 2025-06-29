@@ -481,7 +481,7 @@ export default function Product() {
                         setEditProduct(null);
                      }}
                      submitLabel="Update"
-                     showDelete={true}
+                     showDelete={editProduct?.created_by === getUserId()}
                      onDelete={() =>
                         setConfirm({ open: true, id: editProduct.id })
                      }

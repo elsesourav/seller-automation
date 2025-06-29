@@ -552,67 +552,69 @@ export default function BasicInfo() {
                            </div>
                         </div>
                         <div className="flex gap-2 ml-4">
-                           <button
-                              onClick={async () => {
-                                 try {
-                                    const baseForm = baseForms.find(
-                                       (bf) => bf.id === bfd.base_form_id
-                                    );
-                                    if (baseForm?.form_id) {
-                                       const formData = await getFormById(
-                                          baseForm.form_id
+                           {bfd.created_by === getUserId() && (
+                              <button
+                                 onClick={async () => {
+                                    try {
+                                       const baseForm = baseForms.find(
+                                          (bf) => bf.id === bfd.base_form_id
                                        );
-                                       setFormSchema(
-                                          formData?.structure || null
-                                       );
-                                       setSelectedBaseForm(bfd);
+                                       if (baseForm?.form_id) {
+                                          const formData = await getFormById(
+                                             baseForm.form_id
+                                          );
+                                          setFormSchema(
+                                             formData?.structure || null
+                                          );
+                                          setSelectedBaseForm(bfd);
 
-                                       // Load existing data from data store if available
-                                       if (bfd.data_id) {
-                                          try {
-                                             const { data: dataStoreData } =
-                                                await supabase
-                                                   .from("data_store")
-                                                   .select("data")
-                                                   .eq("id", bfd.data_id)
-                                                   .single();
+                                          // Load existing data from data store if available
+                                          if (bfd.data_id) {
+                                             try {
+                                                const { data: dataStoreData } =
+                                                   await supabase
+                                                      .from("data_store")
+                                                      .select("data")
+                                                      .eq("id", bfd.data_id)
+                                                      .single();
 
-                                             if (dataStoreData?.data) {
-                                                setFormDataToFill(
-                                                   dataStoreData.data
+                                                if (dataStoreData?.data) {
+                                                   setFormDataToFill(
+                                                      dataStoreData.data
+                                                   );
+                                                } else {
+                                                   setFormDataToFill({});
+                                                }
+                                             } catch (error) {
+                                                console.warn(
+                                                   "Could not load existing data:",
+                                                   error
                                                 );
-                                             } else {
                                                 setFormDataToFill({});
                                              }
-                                          } catch (error) {
-                                             console.warn(
-                                                "Could not load existing data:",
-                                                error
-                                             );
+                                          } else {
                                              setFormDataToFill({});
                                           }
-                                       } else {
-                                          setFormDataToFill({});
-                                       }
 
-                                       setShowFillFormModal(true);
-                                    } else {
+                                          setShowFillFormModal(true);
+                                       } else {
+                                          setAlert({
+                                             type: "error",
+                                             message: "No form schema found",
+                                          });
+                                       }
+                                    } catch {
                                        setAlert({
                                           type: "error",
-                                          message: "No form schema found",
+                                          message: "Failed to load form",
                                        });
                                     }
-                                 } catch {
-                                    setAlert({
-                                       type: "error",
-                                       message: "Failed to load form",
-                                    });
-                                 }
-                              }}
-                              className="px-3 py-1 bg-green-600 hover:bg-green-700 text-white rounded text-sm transition-all cursor-pointer flex items-center gap-1"
-                           >
-                              <FiEdit2 size={12} /> Fill
-                           </button>
+                                 }}
+                                 className="px-3 py-1 bg-green-600 hover:bg-green-700 text-white rounded text-sm transition-all cursor-pointer flex items-center gap-1"
+                              >
+                                 <FiEdit2 size={12} /> Fill
+                              </button>
+                           )}
                            {bfd.created_by === getUserId() && (
                               <button
                                  onClick={() => {
@@ -690,7 +692,7 @@ export default function BasicInfo() {
                         });
                      }}
                      submitLabel="Update Entry"
-                     showDelete={true}
+                     showDelete={editFormData?.created_by === getUserId()}
                      onDelete={() => {
                         if (editFormData?.id) {
                            setConfirm({ open: true, id: editFormData.id });
