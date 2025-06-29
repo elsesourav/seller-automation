@@ -10,7 +10,7 @@ import {
 } from "./setup";
 
 export default function SetupContent() {
-   const [activeTab, setActiveTab] = useState("descform");
+   const [activeTab, setActiveTab] = useState("description");
    return (
       <div style={{ display: "flex", flexDirection: "column", gap: "2rem" }}>
          <SetupHeader activeTab={activeTab} setActiveTab={setActiveTab} />

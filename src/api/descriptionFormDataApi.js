@@ -3,6 +3,8 @@ import { getUserId } from "./usersApi";
 
 // Create a new description form data
 export async function createDescriptionFormData({
+   name,
+   label,
    data_id,
    status = "private",
    description_form_id,
@@ -16,6 +18,8 @@ export async function createDescriptionFormData({
       .from("description_form_data")
       .insert([
          {
+            name,
+            label,
             data_id,
             status,
             description_form_id,

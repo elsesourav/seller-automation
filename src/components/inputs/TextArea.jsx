@@ -22,16 +22,14 @@ const TextArea = ({
    };
 
    return (
-      <div
-         className={`relative grid grid-rows-[24px_1fr] h-full ${width} ${className}`}
-      >
+      <div className={`relative flex flex-col h-full ${width} ${className}`}>
          {label && (
-            <label className="block text-sm font-medium text-gray-300 mb-1">
+            <label className="block text-sm font-medium text-gray-300 mb-1 flex-shrink-0">
                {label}
                {required && <span className="text-red-400 ml-1">*</span>}
             </label>
          )}
-         <div className="relative size-full">
+         <div className="relative flex-1 min-h-0">
             <div className="absolute size-full">
                <textarea
                   value={value || ""}
@@ -60,7 +58,7 @@ const TextArea = ({
             )}
          </div>
          {error && (
-            <p className="mt-1 text-sm text-red-400 flex items-center">
+            <p className="mt-1 text-sm text-red-400 flex items-center flex-shrink-0">
                <svg
                   className="w-4 h-4 mr-1"
                   fill="currentColor"
@@ -76,7 +74,9 @@ const TextArea = ({
             </p>
          )}
          {helperText && !error && (
-            <p className="mt-1 text-sm text-gray-400">{helperText}</p>
+            <p className="mt-1 text-sm text-gray-400 flex-shrink-0">
+               {helperText}
+            </p>
          )}
       </div>
    );

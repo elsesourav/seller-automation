@@ -127,6 +127,8 @@ DROP TABLE IF EXISTS base_form_data CASCADE;
 CREATE TABLE
    base_form_data (
       id UUID PRIMARY KEY DEFAULT gen_random_uuid (),
+      name TEXT,
+      label TEXT,
       data_id UUID REFERENCES data_store (id) ON DELETE CASCADE,
       status status_enum DEFAULT 'private',
       base_form_id UUID REFERENCES base_forms (id) ON DELETE CASCADE,
@@ -143,6 +145,8 @@ DROP TABLE IF EXISTS description_form_data CASCADE;
 CREATE TABLE
    description_form_data (
       id UUID PRIMARY KEY DEFAULT gen_random_uuid (),
+      name TEXT,
+      label TEXT,
       data_id UUID REFERENCES data_store (id) ON DELETE CASCADE,
       status status_enum DEFAULT 'private',
       description_form_id UUID REFERENCES description_forms (id) ON DELETE CASCADE,

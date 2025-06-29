@@ -3,6 +3,8 @@ import { getUserId } from "./usersApi";
 
 // Create a new base form data
 export async function createBaseFormData({
+   name,
+   label,
    data_id,
    status = "private",
    base_form_id,
@@ -15,6 +17,8 @@ export async function createBaseFormData({
       .from("base_form_data")
       .insert([
          {
+            name,
+            label,
             data_id,
             status,
             base_form_id,

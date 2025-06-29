@@ -572,19 +572,6 @@ export default function DescForm() {
                                           <FiEdit2 />
                                        </button>
                                     )}
-                                    {df.created_by === getUserId() && (
-                                       <button
-                                          className="text-red-400 hover:text-red-200 flex items-center gap-1 cursor-pointer"
-                                          onClick={() =>
-                                             setConfirm({
-                                                open: true,
-                                                id: df.id,
-                                             })
-                                          }
-                                       >
-                                          <FiTrash2 />
-                                       </button>
-                                    )}
                                  </div>
                               </div>
                            ))
