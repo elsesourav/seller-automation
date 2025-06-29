@@ -10,7 +10,7 @@ import {
 } from "./setup";
 
 export default function SetupContent() {
-   const [activeTab, setActiveTab] = useState("infoform");
+   const [activeTab, setActiveTab] = useState("descform");
    return (
       <div style={{ display: "flex", flexDirection: "column", gap: "2rem" }}>
          <SetupHeader activeTab={activeTab} setActiveTab={setActiveTab} />
