@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { FiEdit2, FiFileText, FiPlus, FiTrash2 } from "react-icons/fi";
+import { DataTable } from "../../";
 import {
    createBaseForm,
    deleteBaseForm,
@@ -97,6 +98,70 @@ export default function InfoForm() {
       }
       return true;
    });
+
+   // Table configuration for info forms
+   const getInfoFormTableHeaders = () => [
+      {
+         key: "name",
+         label: "Name",
+         className: "flex-3",
+         render: (form) => (
+            <div className="flex items-center gap-1">
+               {form.name}
+               {form.label && (
+                  <span className="text-gray-400">({form.label})</span>
+               )}
+               <span
+                  className={`ml-2 px-2 py-1 rounded text-xs font-medium ${
+                     form.status === "private"
+                        ? "bg-pink-700/40 text-pink-300"
+                        : "bg-blue-700/40 text-blue-300"
+                  }`}
+               >
+                  {form.status === "private" ? "Private" : "Public"}
+               </span>
+            </div>
+         ),
+      },
+      {
+         key: "category",
+         label: "Category",
+         className: "flex-2",
+         render: (form) =>
+            categories.find((c) => c.id === form.category_id)?.name || "-",
+      },
+      {
+         key: "owner",
+         label: "Owner",
+         className: "w-24",
+         render: (form) => getUsername(form.created_by),
+      },
+   ];
+
+   // Prepare data for the table
+   const infoFormTableData = filteredForms.map((form) => ({
+      ...form,
+      showAction: form.created_by === getUserId(),
+   }));
+
+   // Handle table row action (edit)
+   const handleInfoFormRowAction = (form) => {
+      setEditForm(form);
+      setForm({
+         name: form.name,
+         label: form.label,
+         status: form.status,
+         vertical_id: form.vertical_id,
+         category_id: form.category_id,
+         form_id: form.form_id,
+      });
+      setShowEditSection(true);
+   };
+
+   // Handle delete action
+   const handleInfoFormDeleteAction = (form) => {
+      setConfirm({ open: true, id: form.id });
+   };
 
    // InfoFormForm component for both Add and Edit
    function InfoFormForm({
@@ -460,67 +525,18 @@ export default function InfoForm() {
             <div className="flex flex-col md:flex-row gap-6">
                {/* Info Form List */}
                <div className="flex-1">
-                  <div className="relative w-full bg-gray-800/70 rounded-2xl overflow-hidden border border-gray-700 shadow-lg">
-                     <div className="flex gap-2 bg-gradient-to-r from-gray-900/80 to-gray-800/80 text-gray-200 px-4 py-2 font-semibold text-sm rounded-t-2xl">
-                        <p className="flex-3 text-left">Name</p>
-                        <p className="flex-2 text-left">Category</p>
-                        <p className="w-24 text-left">Owner</p>
-                        <p className="w-16 text-center">Actions</p>
-                     </div>
-                     <div>
-                        {filteredForms.length === 0 ? (
-                           <div className="text-center text-gray-500 py-4 bg-gray-900/60">
-                              No forms
-                           </div>
-                        ) : (
-                           filteredForms.map((f) => (
-                              <div
-                                 key={f.id}
-                                 className="flex items-center gap-2 border-t border-gray-700 hover:bg-gray-700/40 transition-colors duration-150 group px-4 py-2"
-                              >
-                                 <div className="flex-3 whitespace-nowrap text-white group-hover:text-blue-200 flex items-center gap-1">
-                                    <FiFileText className="text-blue-400" />
-                                    {f.name}{" "}
-                                    {f.label && (
-                                       <span className="text-gray-400">
-                                          ({f.label})
-                                       </span>
-                                    )}
-                                 </div>
-                                 <div className="flex-2 whitespace-nowrap text-gray-200">
-                                    {categories.find(
-                                       (c) => c.id === f.category_id
-                                    )?.name || "-"}
-                                 </div>
-                                 <div className="w-24 text-left text-gray-200">
-                                    {getUsername(f.created_by)}
-                                 </div>
-                                 <div className="w-16 flex gap-2 justify-center">
-                                    {f.created_by === getUserId() && (
-                                       <button
-                                          className="text-blue-400 hover:text-blue-200 flex items-center gap-1 cursor-pointer"
-                                          onClick={() => {
-                                             setEditForm(f);
-                                             setForm({
-                                                name: f.name,
-                                                label: f.label,
-                                                status: f.status,
-                                                vertical_id: f.vertical_id,
-                                                category_id: f.category_id,
-                                                form_id: f.form_id,
-                                             });
-                                             setShowEditSection(true);
-                                          }}
-                                       >
-                                          <FiEdit2 />
-                                       </button>
-                                    )}
-                                 </div>
-                              </div>
-                           ))
-                        )}
-                     </div>
-                  </div>
+                  <DataTable
+                     headers={getInfoFormTableHeaders()}
+                     data={infoFormTableData}
+                     onRowAction={handleInfoFormRowAction}
+                     actionIcon={FiEdit2}
+                     actionLabel="Edit Info Form"
+                     onSecondaryAction={handleInfoFormDeleteAction}
+                     secondaryActionIcon={FiTrash2}
+                     secondaryActionLabel="Delete Info Form"
+                     noDataMessage="No forms"
+                     loading={loading}
+                  />
                </div>
             </div>
          )}

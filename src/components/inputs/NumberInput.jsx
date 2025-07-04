@@ -71,8 +71,10 @@ const NumberInput = ({
    const increment = () => {
       const currentValue =
          value === "" || value === undefined ? 0 : Number(value);
-      const newValue = currentValue + step;
-      if (!max || newValue <= max) {
+      const stepValue = Number(step);
+      const newValue = currentValue + stepValue;
+
+      if (!max || newValue <= Number(max)) {
          onChange(newValue.toString());
       }
    };
@@ -80,8 +82,10 @@ const NumberInput = ({
    const decrement = () => {
       const currentValue =
          value === "" || value === undefined ? 0 : Number(value);
-      const newValue = currentValue - step;
-      if (!min || newValue >= min) {
+      const stepValue = Number(step);
+      const newValue = currentValue - stepValue;
+
+      if (!min || newValue >= Number(min)) {
          onChange(newValue.toString());
       }
    };
@@ -127,7 +131,7 @@ const NumberInput = ({
                type="text"
                inputMode="numeric"
                value={formatNumberIndian(
-                  value === undefined ? "" : value.toString()
+                  value === undefined || value === null ? "" : value.toString()
                )}
                onChange={handleChange}
                onFocus={handleFocus}
@@ -152,7 +156,10 @@ const NumberInput = ({
                <button
                   type="button"
                   onClick={increment}
-                  disabled={disabled || (max && value >= max)}
+                  disabled={
+                     disabled ||
+                     (max !== undefined && Number(value || 0) >= Number(max))
+                  }
                   className="p-1 text-gray-400 hover:text-white cursor-pointer transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                >
                   <svg
@@ -170,7 +177,10 @@ const NumberInput = ({
                <button
                   type="button"
                   onClick={decrement}
-                  disabled={disabled || (min && value <= min)}
+                  disabled={
+                     disabled ||
+                     (min !== undefined && Number(value || 0) <= Number(min))
+                  }
                   className="p-1 text-gray-400 hover:text-white transition-colors disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed"
                >
                   <svg

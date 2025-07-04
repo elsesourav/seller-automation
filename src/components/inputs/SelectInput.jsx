@@ -47,7 +47,7 @@ const SelectInput = ({
                onFocus={() => setFocused(true)}
                onBlur={() => setFocused(false)}
                disabled={disabled}
-               className={`w-full px-4 py-3 pr-10 bg-gray-800/50 border-2 rounded-xl text-left transition-all duration-300 focus:outline-none cursor-pointer ${
+               className={`w-full px-4 py-3 pr-10 bg-gray-800/50 border-2 rounded-xl text-nowrap overflow-y-scroll text-left transition-all duration-300 focus:outline-none cursor-pointer ${
                   error
                      ? "border-red-500 focus:border-red-400"
                      : focused || isOpen

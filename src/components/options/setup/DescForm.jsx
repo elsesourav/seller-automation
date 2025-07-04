@@ -176,7 +176,10 @@ export default function DescForm() {
                      base_form_id: "",
                   }))
                }
-               options={verticals.map((v) => ({ value: v.id, label: v.name }))}
+               options={verticals.map((v) => ({
+                  value: v.id,
+                  label: v.name + `${v.label ? ` (${v.label})` : ""}`,
+               }))}
                placeholder="Select Vertical"
                className="mb-3"
             />
@@ -185,7 +188,7 @@ export default function DescForm() {
                onChange={(val) => setForm((f) => ({ ...f, category_id: val }))}
                options={formCategories.map((c) => ({
                   value: c.id,
-                  label: c.name,
+                  label: c.name + `${c.label ? ` (${c.label})` : ""}`,
                }))}
                placeholder="Select Category"
                className="mb-3"
@@ -195,7 +198,7 @@ export default function DescForm() {
                onChange={(val) => setForm((f) => ({ ...f, base_form_id: val }))}
                options={formBaseForms.map((bf) => ({
                   value: bf.id,
-                  label: bf.name,
+                  label: bf.name + `${bf.label ? ` (${bf.label})` : ""}`,
                }))}
                placeholder="Select Base Form"
                className="mb-3"

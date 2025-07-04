@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { FiBox, FiEdit2, FiPlus, FiTrash2 } from "react-icons/fi";
+import { DataTable } from "../../";
 import { getAllCategories } from "../../../api/categoriesApi";
 import {
    createProduct,
@@ -33,6 +34,7 @@ export default function Product() {
       quantity_per_kg: "",
       sku_id: "",
       increment_per_rupee: "",
+      self_life: "",
    });
    const [confirm, setConfirm] = useState({ open: false, id: null });
    const [alert, setAlert] = useState(null);
@@ -122,7 +124,10 @@ export default function Product() {
                onChange={(val) =>
                   setForm((f) => ({ ...f, vertical_id: val, category_id: "" }))
                }
-               options={verticals.map((v) => ({ value: v.id, label: v.name }))}
+               options={verticals.map((v) => ({
+                  value: v.id,
+                  label: v.name + `${v.label ? ` (${v.label})` : ""}`,
+               }))}
                placeholder="Select Vertical"
                className="mb-3"
             />
@@ -131,7 +136,7 @@ export default function Product() {
                onChange={(val) => setForm((f) => ({ ...f, category_id: val }))}
                options={formCategories.map((c) => ({
                   value: c.id,
-                  label: c.name,
+                  label: c.name + `${c.label ? ` (${c.label})` : ""}`,
                }))}
                placeholder="Select Category"
                className="mb-3"
@@ -167,6 +172,13 @@ export default function Product() {
                }
                className="mb-3"
                useIndianFormat={true}
+            />
+            <NumberInput
+               placeholder="Self Life (months)"
+               value={form.self_life}
+               onChange={(val) => setForm((f) => ({ ...f, self_life: val }))}
+               className="mb-3"
+               min={1}
             />
             <div className="flex flex-row gap-2 justify-between mt-4">
                {showDelete ? (
@@ -216,6 +228,7 @@ export default function Product() {
             quantity_per_kg: "",
             sku_id: "",
             increment_per_rupee: "",
+            self_life: "",
          });
          setProducts(await getAllProducts());
       } catch (e) {
@@ -238,6 +251,7 @@ export default function Product() {
             quantity_per_kg: "",
             sku_id: "",
             increment_per_rupee: "",
+            self_life: "",
          });
          setProducts(await getAllProducts());
       } catch (e) {
@@ -291,6 +305,98 @@ export default function Product() {
       return true;
    });
 
+   // Table configuration
+   const tableHeaders = [
+      {
+         key: "name",
+         label: "Name",
+         className: "flex-5 whitespace-nowrap",
+         render: (product) => (
+            <div className="flex items-center gap-1">
+               {product.name}{" "}
+               {product.label && (
+                  <span className="text-gray-400">({product.label})</span>
+               )}
+               <span className="w-4 h-full grid place-items-center">
+                  <span
+                     className={`p-2 rounded-full ${
+                        product.status === "private"
+                           ? "bg-pink-700/40 text-pink-300"
+                           : "bg-blue-700/40 text-blue-300"
+                     }`}
+                  />
+               </span>
+            </div>
+         ),
+      },
+      {
+         key: "category",
+         label: "Category",
+         className: "flex-2 whitespace-nowrap",
+         render: (product) =>
+            categories.find((c) => c.id === product.category_id)?.name || "-",
+      },
+      {
+         key: "price",
+         label: "Price",
+         className: "w-20",
+         render: (product) => formatIndianNumber(product.price),
+      },
+      {
+         key: "quantity_per_kg",
+         label: "Qty/Kg",
+         className: "w-28",
+         render: (product) => formatIndianNumber(product.quantity_per_kg),
+      },
+      {
+         key: "sku_id",
+         label: "SKU",
+         className: "w-16",
+      },
+      {
+         key: "increment_per_rupee",
+         label: "Inc/Rupee",
+         className: "w-20",
+         render: (product) => formatIndianNumber(product.increment_per_rupee),
+      },
+      {
+         key: "self_life",
+         label: "SLife",
+         className: "w-10",
+         render: (product) => (product.self_life ? product.self_life : "-"),
+      },
+      {
+         key: "owner",
+         label: "Owner",
+         className: "w-20",
+         render: (product) => getUsername(product.created_by),
+      },
+   ];
+
+   // Prepare data for the table
+   const tableData = filteredProducts.map((product) => ({
+      ...product,
+      showAction: product.created_by === getUserId(),
+   }));
+
+   // Handle table row action (edit)
+   const handleTableRowAction = (product) => {
+      setEditProduct(product);
+      setForm({
+         name: product.name,
+         label: product.label,
+         status: product.status,
+         vertical_id: product.vertical_id,
+         category_id: product.category_id,
+         price: product.price,
+         quantity_per_kg: product.quantity_per_kg,
+         sku_id: product.sku_id,
+         increment_per_rupee: product.increment_per_rupee,
+         self_life: product.self_life || "",
+      });
+      setShowEditSection(true);
+   };
+
    return (
       <div className="bg-gray-800/80 rounded-xl p-6 border border-gray-700 text-white shadow-md">
          {alert && (
@@ -319,6 +425,7 @@ export default function Product() {
                      quantity_per_kg: "",
                      sku_id: "",
                      increment_per_rupee: "",
+                     self_life: "",
                   });
                }}
             >
@@ -368,96 +475,15 @@ export default function Product() {
             <div className="flex flex-col md:flex-row gap-6">
                {/* Product List */}
                <div className="flex-1">
-                  <div className="relative w-full bg-gray-800/70 rounded-2xl overflow-hidden border border-gray-700 shadow-lg">
-                     <div className="flex gap-2 bg-gradient-to-r from-gray-900/80 to-gray-800/80 text-gray-200 px-4 py-2 font-semibold text-sm rounded-t-2xl">
-                        <p className="flex-5 text-left">Name</p>
-                        <p className="flex-2 text-left">Category</p>
-                        <p className="w-20 text-left">Price</p>
-                        <p className="w-28 text-left">Qty/Kg</p>
-                        <p className="w-16 text-left">SKU</p>
-                        <p className="w-20 text-left">Inc/Rupee</p>
-                        <p className="w-24 text-left">Owner</p>
-                        <p className="w-16 text-center">Actions</p>
-                     </div>
-                     <div>
-                        {filteredProducts.length === 0 ? (
-                           <div className="text-center text-gray-500 py-4 bg-gray-900/60">
-                              No products
-                           </div>
-                        ) : (
-                           filteredProducts.map((p) => (
-                              <div
-                                 key={p.id}
-                                 className="flex items-center gap-2 border-t border-gray-700 hover:bg-gray-700/40 transition-colors duration-150 group px-4 py-2"
-                              >
-                                 <div className="flex-5 whitespace-nowrap text-white group-hover:text-green-200 flex items-center gap-1">
-                                    {p.name}{" "}
-                                    {p.label && (
-                                       <span className="text-gray-400">
-                                          ({p.label})
-                                       </span>
-                                    )}
-                                    <span className="w-4 h-full grid place-items-center">
-                                       <span
-                                          className={`p-2 rounded-full ${
-                                             p.status === "private"
-                                                ? "bg-pink-700/40 text-pink-300"
-                                                : "bg-blue-700/40 text-blue-300"
-                                          }`}
-                                       />
-                                    </span>
-                                 </div>
-                                 <div className="flex-2 whitespace-nowrap text-gray-200">
-                                    {categories.find(
-                                       (c) => c.id === p.category_id
-                                    )?.name || "-"}
-                                 </div>
-                                 <div className="w-20 text-left text-gray-200">
-                                    {formatIndianNumber(p.price)}
-                                 </div>
-                                 <div className="w-28 text-left text-gray-200">
-                                    {formatIndianNumber(p.quantity_per_kg)}
-                                 </div>
-                                 <div className="w-16 text-left text-gray-200">
-                                    {p.sku_id}
-                                 </div>
-                                 <div className="w-20 text-left text-gray-200">
-                                    {formatIndianNumber(p.increment_per_rupee)}
-                                 </div>
-                                 <div className="w-24 text-left text-gray-200">
-                                    {getUsername(p.created_by)}
-                                 </div>
-                                 <div className="w-16 flex gap-2 justify-center">
-                                    {p.created_by === getUserId() && (
-                                       <button
-                                          className="text-blue-400 hover:text-blue-200 flex items-center gap-1 cursor-pointer"
-                                          onClick={() => {
-                                             setEditProduct(p);
-                                             setForm({
-                                                name: p.name,
-                                                label: p.label,
-                                                status: p.status,
-                                                vertical_id: p.vertical_id,
-                                                category_id: p.category_id,
-                                                price: p.price,
-                                                quantity_per_kg:
-                                                   p.quantity_per_kg,
-                                                sku_id: p.sku_id,
-                                                increment_per_rupee:
-                                                   p.increment_per_rupee,
-                                             });
-                                             setShowEditSection(true);
-                                          }}
-                                       >
-                                          <FiEdit2 />
-                                       </button>
-                                    )}
-                                 </div>
-                              </div>
-                           ))
-                        )}
-                     </div>
-                  </div>
+                  <DataTable
+                     headers={tableHeaders}
+                     data={tableData}
+                     onRowAction={handleTableRowAction}
+                     actionIcon={FiEdit2}
+                     actionLabel="Edit Product"
+                     noDataMessage="No products"
+                     loading={loading}
+                  />
                </div>
             </div>
          )}

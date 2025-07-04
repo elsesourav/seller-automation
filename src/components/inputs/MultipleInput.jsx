@@ -251,13 +251,13 @@ const MultipleInput = ({
       }
 
       return (
-         <div className="flex flex-wrap gap-1 -my-1">
+         <div className="flex flex-nowrap overflow-x-scroll gap-1 -my-1">
             {safeValue.map(
                (val, index) =>
                   val && (
                      <div
                         key={index}
-                        className="inline-flex items-center px-2 py-1 bg-blue-600/20 text-blue-300 text-xs rounded-md border border-blue-500/30"
+                        className="inline-flex text-nowrap items-center px-2 py-1 bg-blue-600/20 text-blue-300 text-xs rounded-md border border-blue-500/30"
                      >
                         {getDisplayValue(val)}
                      </div>

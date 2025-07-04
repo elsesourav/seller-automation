@@ -203,21 +203,18 @@ export default function Description() {
             }}
          >
             <TextInput
-               label="Name"
                value={form.name}
                onChange={(val) => setForm((f) => ({ ...f, name: val }))}
                placeholder="Enter entry name"
                className="mb-3"
             />
             <TextInput
-               label="Label"
                value={form.label}
                onChange={(val) => setForm((f) => ({ ...f, label: val }))}
                placeholder="Enter entry label"
                className="mb-3"
             />
             <SelectInput
-               label="Status"
                value={form.status || "private"}
                onChange={(val) => setForm((f) => ({ ...f, status: val }))}
                options={[
@@ -227,7 +224,6 @@ export default function Description() {
                className="mb-3"
             />
             <SelectInput
-               label="Vertical"
                value={form.vertical_id}
                onChange={(val) =>
                   setForm((f) => ({
@@ -238,36 +234,36 @@ export default function Description() {
                      base_form_data_id: "",
                   }))
                }
-               options={verticals.map((v) => ({ value: v.id, label: v.name }))}
+               options={verticals.map((v) => ({
+                  value: v.id,
+                  label: v.name + `${v.label ? ` (${v.label})` : ""}`,
+               }))}
                placeholder="Select Vertical"
                className="mb-3"
             />
             <SelectInput
-               label="Category"
                value={form.category_id}
                onChange={(val) => setForm((f) => ({ ...f, category_id: val }))}
                options={formCategories.map((c) => ({
                   value: c.id,
-                  label: c.name,
+                  label: c.name + `${c.label ? ` (${c.label})` : ""}`,
                }))}
                placeholder="Select Category"
                className="mb-3"
             />
             <SelectInput
-               label="Description Form"
                value={form.description_form_id}
                onChange={(val) =>
                   setForm((f) => ({ ...f, description_form_id: val }))
                }
                options={formDescriptionForms.map((df) => ({
                   value: df.id,
-                  label: df.name,
+                  label: df.name + `${df.label ? ` (${df.label})` : ""}`,
                }))}
                placeholder="Select Description Form"
                className="mb-3"
             />
             <SelectInput
-               label="Base Form Data"
                value={form.base_form_data_id}
                onChange={(val) =>
                   setForm((f) => ({ ...f, base_form_data_id: val }))

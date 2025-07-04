@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { FiEdit2, FiList, FiPlus, FiTag, FiTrash2 } from "react-icons/fi";
-import { VerticalIcon } from "../../icons/SetupIcons";
+import { DataTable } from "../../";
 import {
    createCategory,
    deleteCategory,
@@ -16,6 +16,7 @@ import {
 } from "../../../api/verticalsApi";
 import ConfirmDialog from "../../ConfirmDialog";
 import CustomAlert from "../../CustomAlert";
+import { VerticalIcon } from "../../icons/SetupIcons";
 import { SelectInput, TextInput } from "../../inputs";
 
 export default function VerticalAndCategory() {
@@ -123,6 +124,67 @@ export default function VerticalAndCategory() {
       }
    };
 
+   // Table configuration for categories
+   const getCategoryTableHeaders = () => [
+      {
+         key: "name",
+         label: "Name",
+         className: "flex-1",
+      },
+      {
+         key: "label",
+         label: "Label",
+         className: "flex-1",
+      },
+      {
+         key: "status",
+         label: "Status",
+         className: "w-24",
+         render: (category) => (
+            <span
+               className={`px-2 py-1 rounded text-xs font-medium ${
+                  category.status === "private"
+                     ? "bg-pink-700/40 text-pink-300"
+                     : "bg-blue-700/40 text-blue-300"
+               }`}
+            >
+               {category.status === "private" ? "Private" : "Public"}
+            </span>
+         ),
+      },
+   ];
+
+   // Handle category delete action
+   const handleCategoryDeleteAction = (category) => {
+      setConfirm({
+         open: true,
+         type: "category",
+         id: category.id,
+      });
+   };
+
+   // Handle category table row action (edit)
+   const handleCategoryRowAction = (category, verticalId) => {
+      setEditCategory(category);
+      setCategoryForm({
+         name: category.name,
+         label: category.label,
+         vertical_id: verticalId,
+         status: category.status,
+      });
+      setShowCategoryModal(true);
+   };
+
+   // Prepare category data for table with actions
+   const getCategoryTableData = (verticalId) => {
+      return categories
+         .filter((c) => c.vertical_id === verticalId)
+         .map((category) => ({
+            ...category,
+            showAction: category.created_by === getUserId(),
+         }));
+   };
+
    // UI
    return (
       <div className="bg-gray-800/80 rounded-xl p-6 border border-gray-700 text-white shadow-md">
@@ -197,7 +259,7 @@ export default function VerticalAndCategory() {
                            </div>
                         )}
                      </div>
-                     {/* Category Table */}
+                     {/* Category Table */}{" "}
                      <div className="mt-2">
                         <div className="flex justify-between items-center mb-2">
                            <h4 className="font-semibold flex items-center gap-1 text-base">
@@ -218,86 +280,20 @@ export default function VerticalAndCategory() {
                               <FiPlus /> Add Category
                            </button>
                         </div>
-                        <div className="relative w-full bg-gray-800/70 rounded-2xl overflow-hidden border border-gray-700 shadow-lg">
-                           <div className="flex justify-between gap-2 bg-gradient-to-r from-gray-900/80 to-gray-800/80 text-gray-200 px-4 py-2 font-semibold text-sm rounded-t-2xl">
-                              <p className="flex-1 text-left">Name</p>
-                              <p className="flex-1 text-left">Label</p>
-                              <p className="w-24 text-left">Status</p>
-                              <p className="w-28 text-center">Actions</p>
-                           </div>
-                           <div>
-                              {categories.filter((c) => c.vertical_id === v.id)
-                                 .length === 0 ? (
-                                 <div className="text-center text-gray-500 py-4 bg-gray-900/60">
-                                    No categories
-                                 </div>
-                              ) : (
-                                 categories
-                                    .filter((c) => c.vertical_id === v.id)
-                                    .map((c) => (
-                                       <div
-                                          key={c.id}
-                                          className="flex justify-baseline gap-2 border-t border-gray-700 hover:bg-gray-700/40 transition-colors duration-150 group px-4 py-2"
-                                       >
-                                          <p className="flex-1 whitespace-nowrap text-white group-hover:text-blue-200">
-                                             {c.name}
-                                          </p>
-                                          <p className="flex-1 whitespace-nowrap text-gray-200 group-hover:text-blue-100">
-                                             {c.label}
-                                          </p>
-                                          <p className="w-24">
-                                             <span
-                                                className={`px-2 py-1 rounded text-xs font-medium ${
-                                                   c.status === "private"
-                                                      ? "bg-pink-700/40 text-pink-300"
-                                                      : "bg-blue-700/40 text-blue-300"
-                                                }`}
-                                             >
-                                                {c.status === "private"
-                                                   ? "Private"
-                                                   : "Public"}
-                                             </span>
-                                          </p>
-                                          <div className="w-28 flex gap-2 justify-center">
-                                             {c.created_by === getUserId() && (
-                                                <>
-                                                   <button
-                                                      className="text-blue-400 hover:text-blue-200 flex items-center gap-1 cursor-pointer"
-                                                      onClick={() => {
-                                                         setEditCategory(c);
-                                                         setCategoryForm({
-                                                            name: c.name,
-                                                            label: c.label,
-                                                            vertical_id: v.id,
-                                                            status: c.status,
-                                                         });
-                                                         setShowCategoryModal(
-                                                            true
-                                                         );
-                                                      }}
-                                                   >
-                                                      <FiEdit2 />
-                                                   </button>
-                                                   <button
-                                                      className="text-red-400 hover:text-red-200 flex items-center gap-1 cursor-pointer"
-                                                      onClick={() =>
-                                                         setConfirm({
-                                                            open: true,
-                                                            type: "category",
-                                                            id: c.id,
-                                                         })
-                                                      }
-                                                   >
-                                                      <FiTrash2 />
-                                                   </button>
-                                                </>
-                                             )}
-                                          </div>
-                                       </div>
-                                    ))
-                              )}
-                           </div>
-                        </div>
+                        <DataTable
+                           headers={getCategoryTableHeaders()}
+                           data={getCategoryTableData(v.id)}
+                           onRowAction={(category) =>
+                              handleCategoryRowAction(category, v.id)
+                           }
+                           actionIcon={FiEdit2}
+                           actionLabel="Edit Category"
+                           onSecondaryAction={handleCategoryDeleteAction}
+                           secondaryActionIcon={FiTrash2}
+                           secondaryActionLabel="Delete Category"
+                           noDataMessage="No categories"
+                           compact={true}
+                        />
                      </div>
                   </div>
                ))}

@@ -12,6 +12,7 @@ export async function createProduct({
    quantity_per_kg,
    sku_id,
    increment_per_rupee,
+   self_life,
 }) {
    const created_by = getUserId();
    if (!created_by) throw new Error("Not authenticated");
@@ -33,6 +34,7 @@ export async function createProduct({
             quantity_per_kg,
             sku_id: sku_id.trim(),
             increment_per_rupee,
+            self_life,
          },
       ])
       .select()
