@@ -7,6 +7,11 @@
    "scripts": {
       "dev": "vite",
       "build": "vite build",
+      "build:extension": "npm run build && npm run package",
+      "package": "node scripts/package-extension.js",
+      "zip": "node scripts/create-zip.js",
+      "release": "node scripts/prepare-release.js",
+      "verify": "node scripts/verify-setup.js",
       "lint": "eslint .",
       "preview": "vite preview"
    },

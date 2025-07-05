@@ -1,9 +1,8 @@
-import {} from "./lib/utils.js";
+// Auto-update checker for Chrome Extension
+// This will run in the background script
 
-// Auto-update functionality
 class ExtensionAutoUpdater {
    constructor() {
-      // GitHub repository for auto-updates
       this.updateUrl =
          "https://api.github.com/repos/elsesourav/seller-automation/releases/latest";
       this.currentVersion = chrome.runtime.getManifest().version;
@@ -66,7 +65,7 @@ class ExtensionAutoUpdater {
       return false;
    }
 
-   async showUpdateNotification(version) {
+   async showUpdateNotification(version, release) {
       // Create notification
       await chrome.notifications.create("extension-update", {
          type: "basic",
@@ -75,49 +74,25 @@ class ExtensionAutoUpdater {
          message: `Version ${version} is now available. Click to learn more.`,
          buttons: [{ title: "Download Update" }, { title: "Remind Later" }],
       });
+
+      // Store notification data for handling clicks
+      await chrome.storage.local.set({
+         pendingNotification: {
+            version: version,
+            downloadUrl: release.html_url,
+         },
+      });
    }
 
-   async startPeriodicChecks() {
-      // Check immediately on extension startup
-      await this.checkForUpdates();
-
-      // Set up periodic checks
-      setInterval(() => {
-         this.checkForUpdates();
-      }, this.checkInterval);
-   }
-}
-
-// Initialize auto-updater
-const autoUpdater = new ExtensionAutoUpdater();
-
-// Start checking for updates when extension loads
-chrome.runtime.onStartup.addListener(() => {
-   autoUpdater.startPeriodicChecks();
-});
-
-chrome.runtime.onInstalled.addListener((details) => {
-   if (details.reason === "install") {
-      console.log("🎉 Seller Automation extension installed!");
-   } else if (details.reason === "update") {
-      console.log("🔄 Seller Automation extension updated!");
-   }
-
-   // Start update checks
-   autoUpdater.startPeriodicChecks();
-});
-
-// Handle notification clicks
-chrome.notifications.onButtonClicked.addListener(
-   async (notificationId, buttonIndex) => {
+   async handleNotificationClick(notificationId, buttonIndex) {
       if (notificationId === "extension-update") {
-         const data = await chrome.storage.local.get("releaseInfo");
+         const data = await chrome.storage.local.get("pendingNotification");
 
          if (buttonIndex === 0) {
             // Download Update
             // Open GitHub release page
             await chrome.tabs.create({
-               url: data.releaseInfo.html_url,
+               url: data.pendingNotification.downloadUrl,
             });
          } else if (buttonIndex === 1) {
             // Remind Later
@@ -131,17 +106,42 @@ chrome.notifications.onButtonClicked.addListener(
          chrome.notifications.clear(notificationId);
       }
    }
-);
 
-// Handle notification clicks (when user clicks the notification itself)
-chrome.notifications.onClicked.addListener(async (notificationId) => {
-   if (notificationId === "extension-update") {
-      const data = await chrome.storage.local.get("releaseInfo");
-      if (data.releaseInfo) {
-         await chrome.tabs.create({
-            url: data.releaseInfo.html_url,
-         });
-      }
-      chrome.notifications.clear(notificationId);
+   async startPeriodicChecks() {
+      // Check immediately
+      await this.checkForUpdates();
+
+      // Set up periodic checks
+      setInterval(() => {
+         this.checkForUpdates();
+      }, this.checkInterval);
    }
-});
+
+   async shouldCheck() {
+      const storage = await chrome.storage.local.get([
+         "lastChecked",
+         "remindLater",
+      ]);
+      const now = Date.now();
+
+      // If user chose "remind later", respect that
+      if (storage.remindLater && now < storage.remindLater) {
+         return false;
+      }
+
+      // Check if enough time has passed since last check
+      const lastChecked = storage.lastChecked || 0;
+      const timeSinceLastCheck = now - lastChecked;
+
+      return timeSinceLastCheck >= this.checkInterval;
+   }
+}
+
+// Export for use in background script
+// eslint-disable-next-line no-undef
+if (typeof module !== "undefined" && module.exports) {
+   // eslint-disable-next-line no-undef
+   module.exports = ExtensionAutoUpdater;
+} else if (typeof window !== "undefined") {
+   window.ExtensionAutoUpdater = ExtensionAutoUpdater;
+}

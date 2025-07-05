@@ -1,6 +1,14 @@
 # 🛒 Seller Automation Chrome Extension
 
-A modern Chrome Extension built with React, Vite, Tailwind CSS, and Firebase Firestore for seller automation and data management.
+A modern Chrome Extension built with React, Vite, Tailwind CSS, Firebase, and Supabase for seller automation and data management with automatic update capabilities.
+
+## 🚀 Features
+
+-  **Product Management**: Select and configure product data through intuitive forms
+-  **Data Collection**: Gather product information from various sources
+-  **Listing Automation**: Create product listings with collected data
+-  **Auto-Updates**: Automatic extension updates via GitHub releases
+-  **Data Storage**: Local storage and cloud integration (Firebase/Supabase)
 
 ## 🔧 Tech Stack
 
@@ -8,7 +16,9 @@ A modern Chrome Extension built with React, Vite, Tailwind CSS, and Firebase Fir
 -  **Vite 6** (latest version for fast development and building)
 -  **Tailwind CSS** (for modern, responsive styling)
 -  **Firebase Firestore** (for data storage, no auth required)
+-  **Supabase** (additional data backend)
 -  **Chrome Extension Manifest V3** (latest extension format)
+-  **GitHub Actions** (for automated releases)
 
 ## 📁 Project Structure
 

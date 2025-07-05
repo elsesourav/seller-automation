@@ -1,0 +1,97 @@
+name: Build and Release Chrome Extension
+
+on:
+   push:
+      tags:
+         - "v*.*.*" # Triggers on version tags like v1.0.0, v1.2.3, etc.
+   workflow_dispatch: # Allows manual trigger
+
+jobs:
+   build-and-release:
+      runs-on: ubuntu-latest
+
+      steps:
+         - name: Checkout code
+           uses: actions/checkout@v4
+
+         - name: Setup Node.js
+           uses: actions/setup-node@v4
+           with:
+              node-version: "18"
+              cache: "npm"
+
+         - name: Install dependencies
+           run: npm install
+
+         - name: Build extension
+           run: npm run build
+
+         - name: Update manifest version
+           run: |
+              # Extract version from git tag (remove 'v' prefix)
+              VERSION=${GITHUB_REF#refs/tags/v}
+              echo "Updating version to: $VERSION"
+
+              # Update version in manifest.json
+              sed -i "s/\"version\": \".*\"/\"version\": \"$VERSION\"/" dist/manifest.json
+
+              # Also update package.json for consistency
+              sed -i "s/\"version\": \".*\"/\"version\": \"$VERSION\"/" package.json
+
+         - name: Create extension ZIP
+           run: |
+              cd dist
+              zip -r ../seller-automation-extension.zip .
+              cd ..
+
+         - name: Create Update XML
+           run: |
+              VERSION=${GITHUB_REF#refs/tags/v}
+              cat > update.xml << EOF
+              <?xml version='1.0' encoding='UTF-8'?>
+              <gupdate xmlns='http://www.google.com/update2/response' protocol='2.0'>
+                <app appid='YOUR_EXTENSION_ID_HERE'>
+                  <updatecheck codebase='https://github.com/${{ github.repository }}/releases/download/v$VERSION/seller-automation-extension.zip' version='$VERSION' />
+                </app>
+              </gupdate>
+              EOF
+
+         - name: Generate Release Notes
+           id: release_notes
+           run: |
+              VERSION=${GITHUB_REF#refs/tags/v}
+              echo "## Changes in v$VERSION" > release_notes.md
+              echo "" >> release_notes.md
+              echo "### What's New:" >> release_notes.md
+              echo "- Updated extension to version $VERSION" >> release_notes.md
+              echo "- Latest features and bug fixes" >> release_notes.md
+              echo "" >> release_notes.md
+              echo "### Installation:" >> release_notes.md
+              echo "1. Download \`seller-automation-extension.zip\`" >> release_notes.md
+              echo "2. Extract the ZIP file" >> release_notes.md
+              echo "3. Open Chrome and go to \`chrome://extensions/\`" >> release_notes.md
+              echo "4. Enable 'Developer mode'" >> release_notes.md
+              echo "5. Click 'Load unpacked' and select the extracted folder" >> release_notes.md
+
+         - name: Create GitHub Release
+           uses: softprops/action-gh-release@v1
+           with:
+              files: |
+                 seller-automation-extension.zip
+                 update.xml
+              body_path: release_notes.md
+              tag_name: ${{ github.ref_name }}
+              name: "Seller Automation v${{ github.ref_name }}"
+              draft: false
+              prerelease: false
+           env:
+              GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+         - name: Upload Build Artifacts
+           uses: actions/upload-artifact@v4
+           with:
+              name: extension-build
+              path: |
+                 dist/
+                 seller-automation-extension.zip
+                 update.xml
