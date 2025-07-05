@@ -6,7 +6,7 @@ class ExtensionAutoUpdater {
       this.updateUrl =
          "https://api.github.com/repos/elsesourav/seller-automation/releases/latest";
       this.currentVersion = chrome.runtime.getManifest().version;
-      this.checkInterval = 60 * 60 * 1000; // Check every hour
+      this.checkInterval = 10 * 60 * 1000; // Check every 10 minutes
    }
 
    async checkForUpdates() {
@@ -25,7 +25,7 @@ class ExtensionAutoUpdater {
                );
 
                // Show notification to user
-               await this.showUpdateNotification(latestVersion, release);
+               await this.showUpdateNotification(latestVersion);
 
                // Store update info
                await chrome.storage.local.set({
@@ -65,7 +65,7 @@ class ExtensionAutoUpdater {
       return false;
    }
 
-   async showUpdateNotification(version, release) {
+   async showUpdateNotification(version) {
       // Create notification
       await chrome.notifications.create("extension-update", {
          type: "basic",
@@ -74,37 +74,6 @@ class ExtensionAutoUpdater {
          message: `Version ${version} is now available. Click to learn more.`,
          buttons: [{ title: "Download Update" }, { title: "Remind Later" }],
       });
-
-      // Store notification data for handling clicks
-      await chrome.storage.local.set({
-         pendingNotification: {
-            version: version,
-            downloadUrl: release.html_url,
-         },
-      });
-   }
-
-   async handleNotificationClick(notificationId, buttonIndex) {
-      if (notificationId === "extension-update") {
-         const data = await chrome.storage.local.get("pendingNotification");
-
-         if (buttonIndex === 0) {
-            // Download Update
-            // Open GitHub release page
-            await chrome.tabs.create({
-               url: data.pendingNotification.downloadUrl,
-            });
-         } else if (buttonIndex === 1) {
-            // Remind Later
-            // Set reminder for 24 hours
-            await chrome.storage.local.set({
-               remindLater: Date.now() + 24 * 60 * 60 * 1000,
-            });
-         }
-
-         // Clear the notification
-         chrome.notifications.clear(notificationId);
-      }
    }
 
    async startPeriodicChecks() {
@@ -117,31 +86,66 @@ class ExtensionAutoUpdater {
       }, this.checkInterval);
    }
 
-   async shouldCheck() {
-      const storage = await chrome.storage.local.get([
-         "lastChecked",
-         "remindLater",
-      ]);
-      const now = Date.now();
+   // Initialize the auto-updater with all Chrome event listeners
+   init() {
+      // Start checking for updates when extension loads
+      chrome.runtime.onStartup.addListener(() => {
+         this.startPeriodicChecks();
+      });
 
-      // If user chose "remind later", respect that
-      if (storage.remindLater && now < storage.remindLater) {
-         return false;
-      }
+      chrome.runtime.onInstalled.addListener((details) => {
+         if (details.reason === "install") {
+            console.log("🎉 Seller Automation extension installed!");
+         } else if (details.reason === "update") {
+            console.log("🔄 Seller Automation extension updated!");
+         }
 
-      // Check if enough time has passed since last check
-      const lastChecked = storage.lastChecked || 0;
-      const timeSinceLastCheck = now - lastChecked;
+         // Start update checks
+         this.startPeriodicChecks();
+      });
 
-      return timeSinceLastCheck >= this.checkInterval;
+      // Handle notification clicks
+      chrome.notifications.onButtonClicked.addListener(
+         async (notificationId, buttonIndex) => {
+            if (notificationId === "extension-update") {
+               const data = await chrome.storage.local.get("releaseInfo");
+
+               if (buttonIndex === 0) {
+                  // Download Update
+                  // Open GitHub release page
+                  await chrome.tabs.create({
+                     url: data.releaseInfo.html_url,
+                  });
+               } else if (buttonIndex === 1) {
+                  // Remind Later
+                  // Set reminder for 24 hours
+                  await chrome.storage.local.set({
+                     remindLater: Date.now() + 24 * 60 * 60 * 1000,
+                  });
+               }
+
+               // Clear the notification
+               chrome.notifications.clear(notificationId);
+            }
+         }
+      );
+
+      // Handle notification clicks (when user clicks the notification itself)
+      chrome.notifications.onClicked.addListener(async (notificationId) => {
+         if (notificationId === "extension-update") {
+            const data = await chrome.storage.local.get("releaseInfo");
+            if (data.releaseInfo) {
+               await chrome.tabs.create({
+                  url: data.releaseInfo.html_url,
+               });
+            }
+            chrome.notifications.clear(notificationId);
+         }
+      });
+
+      console.log("🔄 Auto-updater initialized");
    }
 }
 
-// Export for use in background script
-// eslint-disable-next-line no-undef
-if (typeof module !== "undefined" && module.exports) {
-   // eslint-disable-next-line no-undef
-   module.exports = ExtensionAutoUpdater;
-} else if (typeof window !== "undefined") {
-   window.ExtensionAutoUpdater = ExtensionAutoUpdater;
-}
+// Export as ES module
+export default ExtensionAutoUpdater;
