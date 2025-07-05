@@ -3,8 +3,9 @@
 This extension automatically checks for updates from GitHub releases.
 
 ### How it works:
+
 1. **Extension checks** for updates every hour
-2. **Users get notified** when new versions are available  
+2. **Users get notified** when new versions are available
 3. **Users click notification** to download from GitHub
 4. **Manual installation** of the new version
 
@@ -23,10 +24,11 @@ git push origin master --tags
 ```
 
 That's it! GitHub Actions will automatically:
-- Build the extension
-- Create a ZIP file  
-- Publish a GitHub release
-- Enable auto-update notifications for users Automation Chrome Extension
+
+-  Build the extension
+-  Create a ZIP file
+-  Publish a GitHub release
+-  Enable auto-update notifications for users Automation Chrome Extension
 
 A modern Chrome Extension built with React, Vite, Tailwind CSS, Firebase, and Supabase for seller automation and data management with automatic update capabilities.
 
