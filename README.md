@@ -1,4 +1,32 @@
-# 🛒 Seller Automation Chrome Extension
+# 🛒## 🔄 Auto-Update System
+
+This extension automatically checks for updates from GitHub releases.
+
+### How it works:
+1. **Extension checks** for updates every hour
+2. **Users get notified** when new versions are available  
+3. **Users click notification** to download from GitHub
+4. **Manual installation** of the new version
+
+### Creating a new release:
+
+```bash
+# Make your changes and commit them
+git add .
+git commit -m "Your changes"
+
+# Create release (updates versions, commits, and tags)
+npm run release 1.0.2
+
+# Push to GitHub (triggers auto-build and release)
+git push origin master --tags
+```
+
+That's it! GitHub Actions will automatically:
+- Build the extension
+- Create a ZIP file  
+- Publish a GitHub release
+- Enable auto-update notifications for users Automation Chrome Extension
 
 A modern Chrome Extension built with React, Vite, Tailwind CSS, Firebase, and Supabase for seller automation and data management with automatic update capabilities.
 
@@ -122,8 +150,11 @@ This creates a `dist/` folder with all the extension files.
 # Start development server (for testing React components)
 npm run dev
 
-# Build for production
+# Build extension for production
 npm run build
+
+# Create a new release (version, commit, tag)
+npm run release 1.0.2
 
 # Run linting
 npm run lint
