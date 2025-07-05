@@ -6,7 +6,7 @@ class ExtensionAutoUpdater {
       this.updateUrl =
          "https://api.github.com/repos/elsesourav/seller-automation/releases/latest";
       this.currentVersion = chrome.runtime.getManifest().version;
-      this.checkInterval = 10 * 60 * 1000; // Check every 10 minutes
+      this.checkInterval = 1 * 60 * 1000; // Check every 1 minute
    }
 
    async checkForUpdates() {
