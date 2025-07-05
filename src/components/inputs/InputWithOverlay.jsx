@@ -6,6 +6,7 @@ const InputWithOverlay = ({
    value,
    onChange,
    placeholder = "Click to add custom input",
+   defaultValue = null,
    required = false,
    error = "",
    helperText = "",
@@ -16,6 +17,14 @@ const InputWithOverlay = ({
 }) => {
    const [isOverlayOpen, setIsOverlayOpen] = useState(false);
    const [focused, setFocused] = useState(false);
+
+   // Use value if provided, otherwise use defaultValue
+   const displayValue =
+      value !== undefined &&
+      value !== null &&
+      Object.keys(value || {}).length > 0
+         ? value
+         : defaultValue;
 
    const handleOpenOverlay = () => {
       setIsOverlayOpen(true);
@@ -161,7 +170,7 @@ const InputWithOverlay = ({
             onClose={handleCloseOverlay}
             onSave={handleSaveOverlay}
             title={overlayTitle}
-            initialData={value || {}}
+            initialData={displayValue || {}}
             fields={overlayFields}
          />
       </div>

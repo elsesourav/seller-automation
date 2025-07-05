@@ -642,6 +642,24 @@ const FieldEditor = ({
                                  Additional Settings
                               </h3>
                               <div className="space-y-4">
+                                 {/* Default Value */}
+                                 {normalizedField.type !== "title" &&
+                                    normalizedField.type !== "spacer" && (
+                                       <TextInput
+                                          label="Default Value"
+                                          value={normalizedField.defaultValue}
+                                          onChange={(value) =>
+                                             handleFieldChange({
+                                                defaultValue: value,
+                                             })
+                                          }
+                                          placeholder="Enter default value"
+                                          helperText="Pre-populated value when form loads"
+                                          width="w-full"
+                                          onFocus={handleInputFocus}
+                                       />
+                                    )}
+
                                  {/* Helper Text */}
                                  <TextInput
                                     label="Helper Text"

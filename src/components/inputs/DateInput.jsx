@@ -6,6 +6,7 @@ const DateInput = ({
    onChange,
    min,
    max,
+   defaultValue = "",
    required = false,
    disabled = false,
    error = "",
@@ -21,6 +22,10 @@ const DateInput = ({
       if (onFocus) onFocus(e);
    };
 
+   // Use value if provided, otherwise use defaultValue
+   const displayValue =
+      value !== undefined && value !== null ? value : defaultValue;
+
    return (
       <div className={`relative ${width} ${className}`}>
          {label && (
@@ -33,7 +38,7 @@ const DateInput = ({
          <div className="relative">
             <input
                type="date"
-               value={value || ""}
+               value={displayValue || ""}
                onChange={(e) => onChange(e.target.value)}
                onFocus={handleFocus}
                onBlur={() => setFocused(false)}

@@ -28,6 +28,7 @@ const MultipleInput = ({
    onChange,
    fieldType = "text",
    placeholder = "Click to add items",
+   defaultValue = [],
    options = [],
    required = false,
    error = "",
@@ -42,8 +43,16 @@ const MultipleInput = ({
    const [currentValues, setCurrentValues] = useState([]);
    const [focused, setFocused] = useState(false);
 
+   // Use value if provided, otherwise use defaultValue
+   const displayValue =
+      value && value.length > 0
+         ? value
+         : defaultValue && defaultValue.length > 0
+         ? defaultValue
+         : [];
+
    const handleOpenModal = () => {
-      const safeValue = value || [];
+      const safeValue = displayValue || [];
       setCurrentValues(safeValue.length > 0 ? [...safeValue] : [""]);
       setIsModalOpen(true);
    };
@@ -245,7 +254,7 @@ const MultipleInput = ({
    };
 
    const renderChipsDisplay = () => {
-      const safeValue = value || [];
+      const safeValue = displayValue || [];
       if (safeValue.length === 0) {
          return <span className="text-gray-500">{placeholder}</span>;
       }

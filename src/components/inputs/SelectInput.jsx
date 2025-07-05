@@ -6,6 +6,7 @@ const SelectInput = ({
    onChange,
    options = [],
    placeholder = "Select an option",
+   defaultValue = "",
    required = false,
    disabled = false,
    error = "",
@@ -15,6 +16,10 @@ const SelectInput = ({
 }) => {
    const [focused, setFocused] = useState(false);
    const [isOpen, setIsOpen] = useState(false);
+
+   // Use value if provided, otherwise use defaultValue
+   const displayValue =
+      value !== undefined && value !== null ? value : defaultValue;
 
    const handleSelect = (option) => {
       onChange(option.value);
@@ -29,7 +34,7 @@ const SelectInput = ({
       }
    };
 
-   const selectedOption = options.find((opt) => opt.value === value);
+   const selectedOption = options.find((opt) => opt.value === displayValue);
 
    return (
       <div className={`relative ${width} ${className}`}>

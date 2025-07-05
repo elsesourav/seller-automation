@@ -159,7 +159,8 @@ const CustomForm = ({
 
       const commonProps = {
          label: field.label,
-         value: getCurrentValue(field.name, field.type),
+         value: getCurrentValue(field.name),
+         defaultValue: field.defaultValue,
          onChange: (value) => handleChange(field.name, value),
          placeholder: field.placeholder,
          required: field.required,
@@ -208,15 +209,23 @@ const CustomForm = ({
       if (onSubmit) onSubmit(dataToSubmit);
    };
 
-   // Get current form values (external data takes precedence)
-   const getCurrentValue = (fieldName, fieldType) => {
+   // Get current form values (external data takes precedence, then form data, then default values)
+   const getCurrentValue = (fieldName) => {
       if (
          externalData &&
          Object.prototype.hasOwnProperty.call(externalData, fieldName)
       ) {
          return externalData[fieldName];
       }
-      return formData[fieldName] || (fieldType === "multiple" ? [] : "");
+      if (
+         formData[fieldName] !== undefined &&
+         formData[fieldName] !== null &&
+         formData[fieldName] !== ""
+      ) {
+         return formData[fieldName];
+      }
+      // Return undefined so input components will use their defaultValue prop
+      return undefined;
    };
 
    // Use widths to render rows/columns as in builder

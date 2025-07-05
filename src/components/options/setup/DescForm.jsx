@@ -18,6 +18,7 @@ import { fetchAllUsers, getUserId } from "../../../api/usersApi";
 import { getAllVerticals } from "../../../api/verticalsApi";
 import ConfirmDialog from "../../ConfirmDialog";
 import CustomAlert from "../../CustomAlert";
+import DataTable from "../../DataTable";
 import CustomForm from "../../formMaker/CustomForm";
 import FormBuilder from "../../formMaker/FormBuilder";
 import { SelectInput, TextInput } from "../../inputs";
@@ -119,6 +120,77 @@ export default function DescForm() {
       }
       return true;
    });
+
+   // DataTable configuration
+   const headers = [
+      {
+         key: "name",
+         label: "Name",
+         className: "flex-3",
+         render: (df) => (
+            <div className="flex items-center gap-2">
+               <FiFileText className="text-blue-400 flex-shrink-0" />
+               <span className="text-white">
+                  {df.name}
+                  {df.label && (
+                     <span className="text-gray-400 ml-1">({df.label})</span>
+                  )}
+               </span>
+            </div>
+         ),
+      },
+      {
+         key: "base_form",
+         label: "Base Form",
+         className: "flex-2",
+         render: (df) => (
+            <span className="text-gray-200">
+               {getBaseFormName(df.base_form_id)}
+            </span>
+         ),
+      },
+      {
+         key: "category",
+         label: "Category",
+         className: "flex-2",
+         render: (df) => (
+            <span className="text-gray-200">
+               {categories.find((c) => c.id === df.category_id)?.name || "-"}
+            </span>
+         ),
+      },
+      {
+         key: "owner",
+         label: "Owner",
+         className: "w-24",
+         render: (df) => (
+            <span className="text-gray-200">{getUsername(df.created_by)}</span>
+         ),
+      },
+   ];
+
+   // Handle row actions
+   const handleRowAction = (df) => {
+      if (df.created_by === getUserId()) {
+         setEditForm(df);
+         setForm({
+            name: df.name,
+            label: df.label,
+            status: df.status,
+            base_form_id: df.base_form_id,
+            vertical_id: df.vertical_id,
+            category_id: df.category_id,
+            form_id: df.form_id,
+         });
+         setShowEditSection(true);
+      }
+   };
+
+   // Prepare data with conditional edit access
+   const tableData = filteredDescForms.map((df) => ({
+      ...df,
+      showAction: df.created_by === getUserId(),
+   }));
 
    // DescFormForm component for both Add and Edit
    function DescFormForm({
@@ -515,72 +587,15 @@ export default function DescForm() {
             <div className="flex flex-col md:flex-row gap-6">
                {/* Description Form List */}
                <div className="flex-1">
-                  <div className="relative w-full bg-gray-800/70 rounded-2xl overflow-hidden border border-gray-700 shadow-lg">
-                     <div className="flex gap-2 bg-gradient-to-r from-gray-900/80 to-gray-800/80 text-gray-200 px-4 py-2 font-semibold text-sm rounded-t-2xl">
-                        <p className="flex-3 text-left">Name</p>
-                        <p className="flex-2 text-left">Base Form</p>
-                        <p className="flex-2 text-left">Category</p>
-                        <p className="w-24 text-left">Owner</p>
-                        <p className="w-16 text-center">Actions</p>
-                     </div>
-                     <div>
-                        {filteredDescForms.length === 0 ? (
-                           <div className="text-center text-gray-500 py-4 bg-gray-900/60">
-                              No description forms
-                           </div>
-                        ) : (
-                           filteredDescForms.map((df) => (
-                              <div
-                                 key={df.id}
-                                 className="flex items-center gap-2 border-t border-gray-700 hover:bg-gray-700/40 transition-colors duration-150 group px-4 py-2"
-                              >
-                                 <div className="flex-3 whitespace-nowrap text-white group-hover:text-blue-200 flex items-center gap-1">
-                                    <FiFileText className="text-blue-400" />
-                                    {df.name}{" "}
-                                    {df.label && (
-                                       <span className="text-gray-400">
-                                          ({df.label})
-                                       </span>
-                                    )}
-                                 </div>
-                                 <div className="flex-2 whitespace-nowrap text-gray-200">
-                                    {getBaseFormName(df.base_form_id)}
-                                 </div>
-                                 <div className="flex-2 whitespace-nowrap text-gray-200">
-                                    {categories.find(
-                                       (c) => c.id === df.category_id
-                                    )?.name || "-"}
-                                 </div>
-                                 <div className="w-24 text-left text-gray-200">
-                                    {getUsername(df.created_by)}
-                                 </div>
-                                 <div className="w-16 flex gap-2 justify-center">
-                                    {df.created_by === getUserId() && (
-                                       <button
-                                          className="text-blue-400 hover:text-blue-200 flex items-center gap-1 cursor-pointer"
-                                          onClick={() => {
-                                             setEditForm(df);
-                                             setForm({
-                                                name: df.name,
-                                                label: df.label,
-                                                status: df.status,
-                                                base_form_id: df.base_form_id,
-                                                vertical_id: df.vertical_id,
-                                                category_id: df.category_id,
-                                                form_id: df.form_id,
-                                             });
-                                             setShowEditSection(true);
-                                          }}
-                                       >
-                                          <FiEdit2 />
-                                       </button>
-                                    )}
-                                 </div>
-                              </div>
-                           ))
-                        )}
-                     </div>
-                  </div>
+                  <DataTable
+                     headers={headers}
+                     data={tableData}
+                     onRowAction={handleRowAction}
+                     actionIcon={FiEdit2}
+                     actionLabel="Edit"
+                     noDataMessage="No description forms"
+                     className="bg-gray-800/70"
+                  />
                </div>
             </div>
          )}

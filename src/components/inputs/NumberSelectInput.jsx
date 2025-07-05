@@ -6,6 +6,7 @@ const NumberSelectInput = ({
    onChange,
    options = [],
    placeholder = "Select a number",
+   defaultValue = "",
    required = false,
    disabled = false,
    error = "",
@@ -16,12 +17,16 @@ const NumberSelectInput = ({
    const [focused, setFocused] = useState(false);
    const [isOpen, setIsOpen] = useState(false);
 
+   // Use value if provided, otherwise use defaultValue
+   const displayValue =
+      value !== undefined && value !== null ? value : defaultValue;
+
    const handleSelect = (optionValue) => {
       onChange(Number(optionValue));
       setIsOpen(false);
    };
 
-   const selectedOption = options.find((opt) => opt.value === value);
+   const selectedOption = options.find((opt) => opt.value === displayValue);
 
    return (
       <div className={`relative ${width} ${className}`}>

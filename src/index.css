@@ -204,3 +204,42 @@ body {
       @apply bg-background text-foreground;
    }
 }
+
+/* Custom scrollbar styling for Excel viewer */
+.excel-scroll-container {
+   scrollbar-width: thin;
+   scrollbar-color: #6b7280 #1f2937;
+}
+
+.excel-scroll-container::-webkit-scrollbar {
+   width: 8px;
+   height: 8px;
+}
+
+.excel-scroll-container::-webkit-scrollbar-track {
+   background: #1f2937;
+   border-radius: 4px;
+}
+
+.excel-scroll-container::-webkit-scrollbar-thumb {
+   background: #6b7280;
+   border-radius: 4px;
+   transition: background-color 0.2s ease;
+}
+
+.excel-scroll-container::-webkit-scrollbar-thumb:hover {
+   background: #9ca3af;
+}
+
+/* Scroll fade effect */
+.scroll-fade-bottom::after {
+   content: "";
+   position: absolute;
+   bottom: 0;
+   left: 0;
+   right: 0;
+   height: 20px;
+   background: linear-gradient(to bottom, transparent, rgba(31, 41, 55, 0.8));
+   pointer-events: none;
+   z-index: 10;
+}

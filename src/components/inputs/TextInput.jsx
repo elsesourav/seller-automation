@@ -5,6 +5,7 @@ const TextInput = ({
    value,
    onChange,
    placeholder = "",
+   defaultValue = "",
    required = false,
    disabled = false,
    error = "",
@@ -20,6 +21,10 @@ const TextInput = ({
       if (onFocus) onFocus(e);
    };
 
+   // Use value if provided, otherwise use defaultValue
+   const displayValue =
+      value !== undefined && value !== null ? value : defaultValue;
+
    return (
       <div className={`relative ${width} ${className}`}>
          {label && (
@@ -32,7 +37,7 @@ const TextInput = ({
          <div className="relative">
             <input
                type="text"
-               value={value || ""}
+               value={displayValue || ""}
                onChange={(e) => onChange(e.target.value)}
                onFocus={handleFocus}
                onBlur={() => setFocused(false)}

@@ -5,6 +5,7 @@ const NumberInput = ({
    value,
    onChange,
    placeholder = "",
+   defaultValue = "",
    min,
    max,
    step = 1,
@@ -19,6 +20,10 @@ const NumberInput = ({
 }) => {
    const [focused, setFocused] = useState(false);
    const inputRef = useRef();
+
+   // Use value if provided, otherwise use defaultValue
+   const displayValue =
+      value !== undefined && value !== null ? value : defaultValue;
 
    // Format number with commas (Indian style, controlled by prop)
    function formatNumberIndian(x) {
@@ -131,7 +136,9 @@ const NumberInput = ({
                type="text"
                inputMode="numeric"
                value={formatNumberIndian(
-                  value === undefined || value === null ? "" : value.toString()
+                  displayValue === undefined || displayValue === null
+                     ? ""
+                     : displayValue.toString()
                )}
                onChange={handleChange}
                onFocus={handleFocus}

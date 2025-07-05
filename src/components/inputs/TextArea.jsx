@@ -5,6 +5,7 @@ const TextArea = ({
    value,
    onChange,
    placeholder = "",
+   defaultValue = "",
    required = false,
    disabled = false,
    error = "",
@@ -21,6 +22,10 @@ const TextArea = ({
       if (onFocus) onFocus(e);
    };
 
+   // Use value if provided, otherwise use defaultValue
+   const displayValue =
+      value !== undefined && value !== null ? value : defaultValue;
+
    return (
       <div className={`relative flex flex-col h-full ${width} ${className}`}>
          {label && (
@@ -32,7 +37,7 @@ const TextArea = ({
          <div className="relative flex-1 min-h-0">
             <div className="absolute size-full">
                <textarea
-                  value={value || ""}
+                  value={displayValue || ""}
                   onChange={(e) => onChange(e.target.value)}
                   onFocus={handleFocus}
                   onBlur={() => setFocused(false)}
